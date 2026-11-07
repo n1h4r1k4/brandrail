@@ -4,6 +4,8 @@
 
 Built for the **Inkloom AI brand-governance problem statement** (We Code Coders hackathon) by team **Caffiene Addict**.
 
+**Live demo: https://brandrail-dusky.vercel.app** (no sign-up; each visitor gets a private sandbox)
+
 ![Content review with cited findings](docs/screenshots/review.png)
 
 ## Try it in 3 minutes
@@ -69,17 +71,21 @@ A brand checker fails if it invents rules, misquotes text or over-flags, because
 
 ## Evaluation
 
-`npm run eval` scores the engine against a labelled golden set (`eval/golden.ts`: 44 samples, 12 of them clean controls). `npm run eval -- --ai` adds the Claude review and the verifier. Latest rule-based-only result ([docs/eval-report.md](docs/eval-report.md)):
+`npm run eval` scores the engine against a labelled golden set (`eval/golden.ts`: 44 samples, 12 of them clean controls). `npm run eval -- --ai` adds the AI review and the verifier.
 
-| Metric | Rule-based only |
-|---|---|
-| Precision | 100% (52 TP / 0 FP) |
-| Recall | 90% (all 6 misses are tone/messaging/implied-claim labels that need the AI review) |
-| Blocker precision / recall | 100% / 97% |
-| False flags on clean controls | 0 |
-| Citation validity | 100% |
+| Metric | Rule-based only | Rule-based + AI review + verifier |
+|---|---|---|
+| Precision | 100% (52 TP / 0 FP) | 100% (58 TP / 0 FP) |
+| Recall | 90% (6 missed) | 100% (0 missed) |
+| Blocker precision / recall | 100% / 97% | 100% / 100% |
+| False flags on 12 clean controls | 0 | 0 |
+| Citation validity | 100% | 100% |
 
-These numbers are optimistic: the golden set was written alongside the rules. Round 3 adds independently written samples and real user content.
+Reports: [rule-based](docs/eval-report.md) · [AI run](docs/eval-report-ai.md) · [AI re-run](docs/eval-report-ai-rerun.md). The six issues rule-based checks miss are tone, messaging, audience-fit and implied-claim problems. That is the job of the AI review.
+
+**Caveats:**
+- In the full AI run (Gemini free tier), 5 of the 44 AI calls hit the free daily quota. Those 5 samples were re-run separately and all were caught; the AI column combines both runs.
+- The golden set was written alongside the rules, so these numbers are optimistic. Round 3 adds independently written samples and real user content.
 
 ## Models, APIs, libraries and services
 
@@ -95,7 +101,7 @@ These numbers are optimistic: the golden set was written alongside the rules. Ro
 
 **Data:** all demo data (the Nimbus Pay brand book, facts, sample content, sample creative and guidelines PDF) is fictional and was created for this project. No real company's material is used.
 
-**Screenshots:** [landing](docs/screenshots/landing.png) · [dashboard](docs/screenshots/dashboard.png) · [review](docs/screenshots/review.png) · [verified](docs/screenshots/verified.png) · [insights](docs/screenshots/insights.png)
+**Screenshots:** [landing](docs/screenshots/landing.png) · [dashboard](docs/screenshots/dashboard.png) · [review](docs/screenshots/review.png) · [verified](docs/screenshots/verified.png) · [insights](docs/screenshots/insights.png) · [rulebook](docs/screenshots/rulebook.png)
 
 **Templates and AI assistance (disclosure):** the project was started from `create-next-app` (boilerplate). It is a solo build, and the implementation was written with heavy use of **Claude Code** (Anthropic's AI coding assistant) under the author's direction. Commits made with it carry a `Co-Authored-By: Claude` trailer.
 
@@ -113,6 +119,7 @@ These numbers are optimistic: the golden set was written alongside the rules. Ro
 - Logo misuse (VIS-02) is not checked automatically yet: it is listed in the rulebook and left to the reviewer.
 - OCR quality varies on stylised fonts; creators can correct the OCR text before checking.
 - Personas are a demo convenience, not real authentication.
+- The free Gemini tier has small daily quotas (20 requests a day on `gemini-3.5-flash`). Brandrail falls back to `gemini-3.5-flash-lite` and then `gemini-3.1-flash-lite`. If every quota is used up, the AI step is skipped with a clear message and the rule-based checks still run.
 - English only. The golden set is still small (44 samples).
 
 ## Run locally
