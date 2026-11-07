@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, Instrument_Serif, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono, Space_Grotesk, Tinos } from "next/font/google";
 import { SoundProvider } from "@/components/sound";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const grotesk = Space_Grotesk({ variable: "--font-grotesk", subsets: ["latin"], weight: ["500", "600", "700"] });
 const mono = JetBrains_Mono({ variable: "--font-jbmono", subsets: ["latin"], weight: ["500"] });
-const serif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
+// Times New Roman where the system has it; Tinos (metric-compatible, open licence) everywhere else
+const serif = Tinos({ variable: "--font-tinos", subsets: ["latin"], weight: ["400", "700"], style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: "Brandrail: guardrails, not gatekeepers",

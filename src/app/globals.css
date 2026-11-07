@@ -4,7 +4,7 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
   --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, monospace;
-  --font-serif: var(--font-instrument), Georgia, "Times New Roman", serif;
+  --font-serif: "Times New Roman", Times, var(--font-tinos), serif;
 }
 
 @theme {
@@ -130,6 +130,11 @@
 
 /* ---------- immersive landing ---------- */
 html { scroll-behavior: smooth; }
+/* Lenis smooth scroll (landing page): it drives the scroll itself, so native smooth scrolling must be off while it runs */
+html.lenis, html.lenis body { height: auto; }
+html.lenis { scroll-behavior: auto; }
+.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
 .text-silver {
   background: linear-gradient(180deg, #ffffff 0%, #ddd9f5 60%, #b9b3e3 100%);
   -webkit-background-clip: text;
