@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { activeProvider, claude, describeClaudeError, modelFor } from "./client";
+import { activeProvider, claude, describeClaudeError, GEMINI_DEFAULT_CHAIN, modelFor } from "./client";
 
 export interface StructuredResult<T> {
   status: "ok" | "error" | "refused" | "off";
@@ -68,7 +68,7 @@ async function geminiClient(): Promise<GeminiClient> {
   const { GoogleGenAI } = await import("@google/genai");
   gemini = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
-    httpOptions: { timeout: 100_000, retryOptions: { attempts: 2 } },
+    httpOptions: { timeout: 40_000, retryOptions: { attempts: 1 } },
   }) as unknown as GeminiClient;
   return gemini;
 }
@@ -93,7 +93,7 @@ function toGeminiSchema(schema: z.ZodType): unknown {
 
 function describeGeminiError(err: unknown): string {
   const status = (err as { status?: number })?.status;
-  if (status === 429) return "Gemini free-tier rate limit reached. Wait a minute and run the check again.";
+  if (status === 429) return "The free Gemini quota is used up for now. Rule-based checks still ran; try the AI review again later.";
   if (status === 401 || status === 403) return "The Gemini API key was rejected.";
   if (status === 404) return "The configured Gemini model was not found. Set BRANDRAIL_GEMINI_MODEL to an available model.";
   if (status === 400) return `Gemini rejected the request (${String((err as Error).message ?? "").slice(0, 160)}).`;
@@ -101,19 +101,32 @@ function describeGeminiError(err: unknown): string {
   return "Could not reach the Gemini API.";
 }
 
+// Free-tier quotas are per model, so the review falls through a chain of models.
+// Models that hit a quota are skipped for a while instead of being retried on every request.
+const cooldownUntil = new Map<string, number>();
+
+function geminiChain(tier: "review" | "fast") {
+  const configured = (process.env.BRANDRAIL_GEMINI_CHAIN ?? "").split(",").map((m) => m.trim()).filter(Boolean);
+  const chain = configured.length ? configured : GEMINI_DEFAULT_CHAIN;
+  const first = modelFor(tier);
+  return [first, ...chain.filter((m) => m !== first)];
+}
+
 async function viaGemini<T>(req: Request<T>): Promise<StructuredResult<T>> {
   const started = Date.now();
-  const primary = modelFor(req.tier);
-  const fallback = modelFor("fast");
-  // On a free-tier rate limit, retry once on the lighter model, which has its own quota.
-  const chain = primary === fallback ? [primary] : [primary, fallback];
-  let lastErr: unknown;
+  const now = Date.now();
+  const chain = geminiChain(req.tier).filter((m) => (cooldownUntil.get(m) ?? 0) < now);
+  let lastErr: unknown = { status: 429 };
   for (const model of chain) {
+    if (Date.now() - started > 60_000) break; // keep the whole check inside the request budget
     try {
       return await geminiOnce(req, model, started);
     } catch (err) {
       lastErr = err;
-      if ((err as { status?: number })?.status !== 429) break;
+      const status = (err as { status?: number })?.status;
+      if (status === 401) break; // bad key: no point trying other models
+      if (status === 429) cooldownUntil.set(model, Date.now() + 15 * 60_000);
+      if (status === 404 || status === 403) cooldownUntil.set(model, Date.now() + 6 * 60 * 60_000);
     }
   }
   return { status: "error", message: describeGeminiError(lastErr), latencyMs: Date.now() - started };

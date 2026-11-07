@@ -10,6 +10,8 @@ export const CLAUDE_REVIEW_MODEL = process.env.BRANDRAIL_REVIEW_MODEL || "claude
 export const CLAUDE_FAST_MODEL = process.env.BRANDRAIL_FAST_MODEL || "claude-haiku-5-5";
 export const GEMINI_REVIEW_MODEL = process.env.BRANDRAIL_GEMINI_MODEL || "gemini-3.5-flash";
 export const GEMINI_FAST_MODEL = process.env.BRANDRAIL_GEMINI_FAST_MODEL || "gemini-3.5-flash-lite";
+// Fallback order when a model's free daily quota runs out (each model has its own quota).
+export const GEMINI_DEFAULT_CHAIN = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
 
 export function activeProvider(): Provider {
   if (process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN) return "claude";
