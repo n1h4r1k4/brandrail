@@ -7,7 +7,7 @@ import { AmbientWhileMounted } from "@/components/sound";
 import { World } from "@/components/landing/world";
 import { SmokeCursor } from "@/components/landing/smoke-cursor";
 import { GuideOrb, LandingSettingsProvider, Reveal, ScrollFillText, SmoothScroll, useLanding } from "@/components/landing/bits";
-import { ButtonLink, CountUp, DAY, DemoForm, Go, HEAD, HEAD_SIZE, Header, Label, Lede, Mark, NIGHT, ProductShot, SiteFooter, SUB_SIZE } from "@/components/landing/site";
+import { ButtonLink, CountUp, DAY, DemoForm, Go, HEAD, KeepScrolling, HEAD_SIZE, Header, Label, Lede, Mark, NIGHT, ProductShot, SiteFooter, SUB_SIZE } from "@/components/landing/site";
 import { PROOF, SCREENS } from "@/components/landing/content";
 
 interface Props { hasSession: boolean; showGate: boolean; aiNote: string; expired: boolean }
@@ -58,6 +58,7 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
             <DemoForm>Try the demo <Go /></DemoForm>
             <ButtonLink href="/about" ghost>How it works</ButtonLink>
           </div>
+          <KeepScrolling className="absolute bottom-5 left-1/2 -translate-x-1/2" />
         </section>
 
         <section className="relative flex h-screen flex-col justify-center px-5 sm:px-12">
@@ -187,7 +188,7 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
         </div>
       </div>
 
-      <SiteFooter aiNote={aiNote} next={{ href: "/about", label: "How it works" }} />
+      <SiteFooter aiNote={aiNote} next={{ href: "/about", label: "How it works" }} auto />
       <GuideOrb />
     </main>
   );

@@ -6,7 +6,7 @@ import { AmbientWhileMounted } from "@/components/sound";
 import { EvidenceScene } from "@/components/landing/evidence";
 import { SmokeCursor } from "@/components/landing/smoke-cursor";
 import { GuideOrb, LandingSettingsProvider, Reveal, SmoothScroll, useLanding } from "@/components/landing/bits";
-import { CountUp, DAY, DemoForm, Go, HEAD, HEAD_SIZE, Header, Label, Lede, Mark, SiteFooter } from "@/components/landing/site";
+import { CountUp, DAY, DemoForm, Go, HEAD, KeepScrolling, HEAD_SIZE, Header, Label, Lede, Mark, SiteFooter } from "@/components/landing/site";
 
 interface Props { hasSession: boolean; showGate: boolean; aiNote: string }
 
@@ -39,13 +39,14 @@ function Inner({ hasSession, showGate, aiNote }: Props) {
       <Header hasSession={hasSession} active="about" />
 
       <div id="map" className="relative z-10 [text-shadow:0_2px_22px_rgba(4,6,26,0.95)]">
-        <section className="flex h-screen flex-col justify-end px-5 pb-14 sm:px-12">
+        <section className="relative flex h-screen flex-col justify-end px-5 pb-14 sm:px-12">
           <Label>How it works</Label>
           <div className="mt-5 max-w-4xl" style={HEAD_SIZE}>
             <Reveal className={HEAD}>A brand guide only works</Reveal>
             <Reveal className={HEAD} delay={100}>if it&apos;s used on <Mark>every</Mark> post.</Reveal>
           </div>
           <Lede className="mt-6">Brandrail turns the guide into checks that run on every draft, so nobody has to remember what page 37 said.</Lede>
+          <KeepScrolling className="absolute bottom-5 left-1/2 -translate-x-1/2" />
         </section>
 
         <section className="flex h-screen flex-col items-center justify-center px-5 text-center sm:px-12">
@@ -115,7 +116,7 @@ function Inner({ hasSession, showGate, aiNote }: Props) {
         </section>
       </div>
 
-      <SiteFooter aiNote={aiNote} next={{ href: "/screens", label: "Screens" }} />
+      <SiteFooter aiNote={aiNote} next={{ href: "/screens", label: "Screens" }} auto />
       <GuideOrb />
     </main>
   );

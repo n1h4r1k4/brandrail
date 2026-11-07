@@ -2,9 +2,10 @@
 // Shared pieces of Brandrail's marketing pages, in Brandrail's own look: indigo and teal from
 // the logo, sentence-case serif headlines, a floating capsule header, product cards and footer.
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { ArrowRight, ArrowUpRight, Check, VolumeX } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, ChevronDown, VolumeX } from "lucide-react";
 import { useSound } from "@/components/sound";
 import { LogoMark } from "@/components/ui";
 import { SettingsMenu } from "./bits";
@@ -150,7 +151,67 @@ export function ProductShot({ screen, className, tall = true }: { screen: Screen
 }
 
 // ------------------------------------------------------------- footer
-export function SiteFooter({ aiNote, next }: { aiNote: string; next: { href: string; label: string } }) {
+/** Small animated cue at the bottom of a hero. */
+export function KeepScrolling({ className }: { className?: string }) {
+  return (
+    <div className={clsx("pointer-events-none flex flex-col items-center gap-1 text-[13px] font-medium text-white [filter:drop-shadow(0_1px_6px_rgba(11,15,42,0.8))]", className)} aria-hidden="true">
+      <span>Keep scrolling</span>
+      <ChevronDown size={16} className="animate-bounce" />
+    </div>
+  );
+}
+
+/**
+ * Once the visitor reaches the bottom of the page, scrolling a little further fills a bar and
+ * opens the next page. Works with a wheel, trackpad, touch and the keyboard.
+ */
+function useScrollOn(href: string, enabled: boolean) {
+  const router = useRouter();
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    if (!enabled) return;
+    router.prefetch(href);
+    let acc = 0, done = false, touchY: number | null = null, idle = 0;
+    const atBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 6;
+    const push = (d: number) => {
+      if (done) return;
+      if (!atBottom()) { acc = 0; setP(0); return; }
+      acc = Math.max(0, acc + d);
+      const v = Math.min(1, acc / 700);
+      setP(v);
+      window.clearTimeout(idle);
+      idle = window.setTimeout(() => { if (!done) { acc = 0; setP(0); } }, 1600);
+      if (v >= 1) { done = true; router.push(href); }
+    };
+    const onWheel = (e: WheelEvent) => push(e.deltaY);
+    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0].clientY; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchY === null) return;
+      const y = e.touches[0].clientY;
+      push((touchY - y) * 2.5);
+      touchY = y;
+    };
+    const onKey = (e: KeyboardEvent) => { if (["ArrowDown", "PageDown", " ", "End"].includes(e.key)) push(180); };
+    const onScroll = () => { if (!atBottom()) { acc = 0; setP(0); } };
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(idle);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [href, enabled, router]);
+  return p;
+}
+
+export function SiteFooter({ aiNote, next, auto = false }: { aiNote: string; next: { href: string; label: string }; auto?: boolean }) {
+  const progress = useScrollOn(next.href, auto);
   const cols: { title: string; items: [string, string, boolean?][] }[] = [
     { title: "Product", items: [["Live demo", "/app"], ["Screens", "/screens"], ["How it works", "/about"]] },
     { title: "Source", items: [["GitHub", "https://github.com/n1h4r1k4/brandrail", true], ["README", "https://github.com/n1h4r1k4/brandrail#readme", true]] },
@@ -204,6 +265,14 @@ export function SiteFooter({ aiNote, next }: { aiNote: string; next: { href: str
           <span className="grid h-12 w-12 place-items-center rounded-full bg-indigo-600 text-white transition group-hover:translate-x-1"><ArrowRight size={20} /></span>
         </span>
       </Link>
+      {auto && (
+        <div className="mt-4 flex items-center gap-4 text-sm text-[var(--l-muted)]">
+          <span className="inline-flex shrink-0 items-center gap-1.5"><ChevronDown size={15} className="animate-bounce" /> Keep scrolling to open {next.label}</span>
+          <span className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--l-line)]">
+            <span className="block h-full rounded-full bg-gradient-to-r from-indigo-500 to-teal-400 transition-[width] duration-150" style={{ width: `${progress * 100}%` }} />
+          </span>
+        </div>
+      )}
       <div className="mt-6 flex flex-wrap justify-between gap-3 pr-16 text-xs text-[var(--l-muted)]">
         <span>© 2026 Brandrail. Demo data is fictional.</span>
         <span>{aiNote}</span>
