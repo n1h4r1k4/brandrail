@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Volume2, VolumeX } from "lucide-react";
 import { useSound } from "./sound";
+import { LogoMark } from "./ui";
 
 /** Loader, then the choice to enter with or without sound. Remembered for the browser session. */
 export function IntroGate() {
@@ -46,37 +47,30 @@ export function IntroGate() {
       aria-modal="true"
       aria-label="Enter Brandrail"
       className={clsx(
-        "fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#f3eefe] px-6 transition-all duration-1000 ease-[cubic-bezier(.7,0,.2,1)]",
-        phase === "leaving" && "pointer-events-none -translate-y-full",
+        "fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[#070b22] px-6 text-white transition-all duration-1000 ease-[cubic-bezier(.7,0,.2,1)]",
+        phase === "leaving" && "pointer-events-none opacity-0 [transform:scale(1.04)]",
       )}
     >
-      <div className="text-center">
-        <div className="font-serif text-[44px] leading-none tracking-tight text-[#2a1647]">
-          brand<span className="text-violet-600">rail</span>
-        </div>
-        <p className="mt-6 font-mono text-[11px] uppercase leading-relaxed tracking-[0.14em] text-[#2a1647]">
-          Pre-publication brand governance<br />for the brands of tomorrow
-        </p>
+      <div className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-indigo-600/40 blur-[100px]" />
+      <div className="pointer-events-none absolute -right-24 bottom-1/4 h-96 w-96 rounded-full bg-teal-400/25 blur-[100px]" />
+      <div className="relative flex flex-col items-center text-center">
+        <LogoMark size={64} />
+        <div className="mt-6 font-serif text-[46px] leading-none tracking-tight">Brandrail</div>
+        <p className="mt-4 text-[15px] text-indigo-100/80">Pre-publication brand governance. Guardrails, not gatekeepers.</p>
       </div>
-
-      <div className="absolute inset-x-0 bottom-14 flex flex-col items-center gap-5">
+      <div className="relative mt-14 flex h-28 w-full max-w-sm flex-col items-center justify-start gap-4">
         {phase === "loading" ? (
-          <div className="flex flex-col items-center gap-3">
-            <span className="font-mono text-[11px] tracking-[0.2em] text-[#2a1647]">{String(pct).padStart(3, "0")}%</span>
-            <span className="h-px w-40 bg-[#2a1647]/15"><span className="block h-px bg-violet-600 transition-[width]" style={{ width: `${pct}%` }} /></span>
-          </div>
+          <>
+            <span className="h-1 w-full overflow-hidden rounded-full bg-white/10"><span className="block h-full rounded-full bg-gradient-to-r from-indigo-400 to-teal-300 transition-[width]" style={{ width: `${pct}%` }} /></span>
+            <span className="text-xs text-indigo-200/80">Loading the rulebook · {pct}%</span>
+          </>
         ) : (
           <>
-            <button
-              autoFocus
-              onClick={() => enter(true)}
-              className="fade-up group relative inline-flex items-center gap-2.5 overflow-hidden rounded-full border border-violet-400/60 bg-gradient-to-b from-white/70 to-violet-200/60 px-8 py-3.5 text-[15px] text-[#3b1a74] shadow-[0_10px_40px_-10px_rgba(124,58,237,0.6),inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur transition hover:shadow-[0_10px_50px_-6px_rgba(124,58,237,0.75)]"
-            >
-              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent transition duration-700 group-hover:translate-x-full" />
-              <Volume2 size={17} /> Enter with sound
+            <button autoFocus onClick={() => enter(true)} className="fade-up inline-flex items-center gap-2.5 rounded-full bg-indigo-600 px-7 py-3 text-[15px] font-medium shadow-[0_12px_30px_-10px_rgba(79,70,229,0.9)] transition hover:bg-indigo-500">
+              <Volume2 size={17} /> Start with sound
             </button>
-            <button onClick={() => enter(false)} className="fade-up inline-flex items-center gap-2 border-b border-[#2a1647]/40 pb-0.5 text-sm text-[#2a1647] transition hover:border-[#2a1647] [animation-delay:120ms]">
-              <VolumeX size={15} /> Enter without sound
+            <button onClick={() => enter(false)} className="fade-up inline-flex items-center gap-2 text-sm text-indigo-100/80 transition hover:text-white [animation-delay:120ms]">
+              <VolumeX size={15} /> Start without sound
             </button>
           </>
         )}

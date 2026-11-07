@@ -16,16 +16,16 @@ export type Quality = "high" | "low";
 
 const PALETTE = {
   day: {
-    zenith: "#a493e6", horizon: "#e6c6f0", fog: "#c3aeea", fogDensity: 0.0105,
-    grassBase: "#3d0c80", grassTip: "#a24ee8", ground: "#55179a", sand: "#a995cf",
-    rock: "#8a7499", water: "#bfa9ee", hemiSky: "#efe4ff", hemiGround: "#6d28d9", sun: "#ffe0f4",
-    cloud: 0.85, leaf: "#3d2a63", rail: "#7c3aed", sculptureAdditive: false,
+    zenith: "#7d8cf0", horizon: "#ffd6c4", fog: "#c9c4ec", fogDensity: 0.0105,
+    grassBase: "#1c1a5c", grassTip: "#6170f2", ground: "#222071", sand: "#c4c0db",
+    rock: "#6d7691", water: "#b4c2f6", hemiSky: "#f2eeff", hemiGround: "#2c3192", sun: "#ffe2cc",
+    cloud: 0.85, leaf: "#262b66", rail: "#4f46e5", sculptureAdditive: false,
   },
   night: {
-    zenith: "#06051a", horizon: "#2b1a5e", fog: "#1a1240", fogDensity: 0.018,
-    grassBase: "#120533", grassTip: "#4c1d95", ground: "#160a38", sand: "#3b2d63",
-    rock: "#2a2150", water: "#2e2266", hemiSky: "#5b4bb0", hemiGround: "#0c0726", sun: "#a5b4fc",
-    cloud: 0.18, leaf: "#8b7bd8", rail: "#a5b4fc", sculptureAdditive: true,
+    zenith: "#050816", horizon: "#1b2559", fog: "#10163d", fogDensity: 0.018,
+    grassBase: "#0b0f33", grassTip: "#3740a8", ground: "#0e1238", sand: "#2b3263",
+    rock: "#242a52", water: "#232c6b", hemiSky: "#4b56b8", hemiGround: "#070a22", sun: "#a5b4fc",
+    cloud: 0.18, leaf: "#7c89e8", rail: "#a5b4fc", sculptureAdditive: true,
   },
 };
 
@@ -297,7 +297,7 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     const clouds: THREE.Sprite[] = [];
     const rc = rand(9);
     for (let i = 0; i < (hi ? 26 : 12); i++) {
-      const m = keep(new THREE.SpriteMaterial({ map: cloudTex, color: rc() < 0.7 ? "#f6bfe6" : "#ffe4f6", transparent: true, opacity: P.cloud * (0.6 + rc() * 0.4), depthWrite: false, fog: false }));
+      const m = keep(new THREE.SpriteMaterial({ map: cloudTex, color: rc() < 0.6 ? "#ffe6d8" : "#ffffff", transparent: true, opacity: P.cloud * (0.6 + rc() * 0.4), depthWrite: false, fog: false }));
       const s = new THREE.Sprite(m);
       const sc = 60 + rc() * 90;
       s.scale.set(sc * 1.6, sc, 1);
@@ -336,7 +336,7 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     const sPos = new Float32Array(N * 3);
     const sCol = new Float32Array(N * 3);
     const sSize = new Float32Array(N);
-    const palette = theme === "day" ? ["#f0abfc", "#e879f9", "#c084fc", "#a855f7", "#ffffff", "#f5d0fe"] : ["#a5b4fc", "#c4b5fd", "#e879f9", "#5eead4", "#ffffff"];
+    const palette = theme === "day" ? ["#818cf8", "#a5b4fc", "#6366f1", "#2dd4bf", "#5eead4", "#ffffff", "#c7d2fe"] : ["#a5b4fc", "#818cf8", "#2dd4bf", "#5eead4", "#ffffff"];
     const rp = rand(21);
     for (let i = 0; i < N; i++) {
       const c = new THREE.Color(palette[Math.floor(rp() * palette.length)]);
@@ -488,7 +488,7 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
   // painted backdrop: shows while the scene loads, and stays if the device has no WebGL,
   // so the white headlines are always readable
   const fallback = theme === "night"
-    ? "linear-gradient(180deg, #0c0920 0%, #1e1446 45%, #2e1065 70%, #120726 100%)"
-    : "linear-gradient(180deg, #7c6bd6 0%, #9a86ea 35%, #6d28d9 58%, #3b0f7a 80%, #24104f 100%)";
+    ? "linear-gradient(180deg, #050816 0%, #141c4a 45%, #1e2470 70%, #070a22 100%)"
+    : "linear-gradient(180deg, #5f6fd8 0%, #8e8fe6 35%, #3b3fb8 58%, #1c1a5c 80%, #121442 100%)";
   return <div ref={host} className="fixed inset-0 z-0" style={{ background: fallback }} aria-hidden="true" />;
 }

@@ -1,8 +1,11 @@
 "use client";
+import Link from "next/link";
+import clsx from "clsx";
+import { ArrowLeft, Check } from "lucide-react";
 import { IntroGate } from "@/components/intro-gate";
 import { GuideOrb, LandingSettingsProvider, SmoothScroll } from "@/components/landing/bits";
 import { SmokeCursor } from "@/components/landing/smoke-cursor";
-import { Caption, DAY, DemoForm, DownArrow, GlitchDefs, Header, Hook, ProductShot, SiteFooter } from "@/components/landing/site";
+import { ButtonLink, DAY, DemoForm, Go, HEAD, HEAD_SIZE, Header, Label, Lede, ProductShot, SiteFooter } from "@/components/landing/site";
 import { SCREENS } from "@/components/landing/content";
 
 interface Props { index: number; hasSession: boolean; showGate: boolean; aiNote: string }
@@ -11,54 +14,76 @@ export function ScreenDetail(props: Props) {
   return <LandingSettingsProvider><Inner {...props} /></LandingSettingsProvider>;
 }
 
-const Label = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-center gap-1 text-lg text-[var(--l-muted)]/70">{children} <DownArrow /></div>
+const Chip = ({ children }: { children: React.ReactNode }) => (
+  <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">{children}</span>
 );
 
 function Inner({ index, hasSession, showGate, aiNote }: Props) {
   const s = SCREENS[index];
+  const prev = SCREENS[(index + SCREENS.length - 1) % SCREENS.length];
   const next = SCREENS[(index + 1) % SCREENS.length];
   return (
-    <main className="relative min-h-screen bg-[var(--l-bg)] text-[var(--l-ink)]" style={{ ...(DAY as React.CSSProperties), ["--accent" as string]: s.accent }}>
-      <GlitchDefs />
+    <main className="relative min-h-screen bg-[var(--l-bg)] text-[var(--l-ink)]" style={DAY as React.CSSProperties}>
       <SmoothScroll />
       {showGate && <IntroGate />}
       <Header hasSession={hasSession} active="screens" />
       <div id="detail" data-tone="light" className="relative">
         <SmokeCursor activeId="detail" />
-        <section className="relative z-20 grid min-h-screen gap-12 px-5 pb-12 pt-32 sm:px-12 lg:grid-cols-2">
-          <div className="flex flex-col justify-between gap-12">
-            <div className="grid max-w-xl grid-cols-2 gap-x-10 gap-y-10">
-              <div><Label>Type</Label><p className="mt-3 font-mono text-[12px] font-medium uppercase">{s.type}</p></div>
-              <div><Label>Year</Label><p className="mt-3 font-mono text-[12px] font-medium">2026</p></div>
-              <div><Label>Scope</Label><div className="mt-3 flex flex-col items-start gap-1.5">{s.scope.map((x) => <span key={x} className="rounded-full border border-[var(--l-line)] px-3 py-1 font-mono text-[11px] font-medium uppercase">{x}</span>)}</div></div>
-              <div><Label>Challenge</Label><p className="mt-3 font-mono text-[12px] font-medium uppercase leading-relaxed">{s.challenge}</p></div>
-            </div>
-            <div>
-              <h1 className="font-serif leading-none" style={{ fontSize: "clamp(40px, 5vw, 80px)" }}>{s.name}</h1>
-              <Caption className="mt-6">{s.blurb}</Caption>
+        <section className="relative z-20 grid items-center gap-12 px-5 pb-16 pt-32 sm:px-12 lg:min-h-screen lg:grid-cols-[1fr_1.2fr]">
+          <div>
+            <Link href="/screens" className="inline-flex items-center gap-2 text-sm text-[var(--l-muted)] hover:text-indigo-700"><ArrowLeft size={15} /> All screens</Link>
+            <div className="mt-8"><Label className="text-indigo-700">Screen {index + 1} of {SCREENS.length}</Label></div>
+            <h1 className={clsx(HEAD, "mt-5")} style={HEAD_SIZE}>{s.name}</h1>
+            <Lede className="mt-5 text-[var(--l-muted)]">{s.blurb}.</Lede>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <DemoForm>Try it live <Go /></DemoForm>
             </div>
           </div>
-          <ProductShot screen={s} info={false} className="lg:w-[82%] lg:justify-self-end" />
+          <ProductShot screen={s} tall={false} />
         </section>
-        <section className="relative z-20 grid gap-8 border-t border-[var(--l-ink)]/80 px-5 py-16 sm:mx-12 sm:px-0 lg:grid-cols-2">
-          <h2 className="text-2xl">What it is</h2>
-          <p className="font-serif text-[clamp(22px,2.2vw,36px)] leading-[1.15] [text-indent:22%]">↳ {s.what}</p>
+
+        <section className="relative z-20 px-5 sm:px-12">
+          <div className="grid gap-px overflow-hidden rounded-3xl border border-[var(--l-line)] bg-[var(--l-line)] sm:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white/85 p-6"><div className="text-xs font-semibold uppercase tracking-wider text-[var(--l-muted)]">Type</div><p className="mt-3 font-serif text-2xl">{s.type}</p></div>
+            <div className="bg-white/85 p-6"><div className="text-xs font-semibold uppercase tracking-wider text-[var(--l-muted)]">Covers</div><div className="mt-3 flex flex-wrap gap-2">{s.scope.map((x) => <Chip key={x}>{x}</Chip>)}</div></div>
+            <div className="bg-white/85 p-6"><div className="text-xs font-semibold uppercase tracking-wider text-[var(--l-muted)]">Problem it solves</div><p className="mt-3 text-[15px] leading-relaxed">{s.challenge}.</p></div>
+            <div className="bg-white/85 p-6"><div className="text-xs font-semibold uppercase tracking-wider text-[var(--l-muted)]">Built with</div><div className="mt-3 flex flex-wrap gap-2">{s.stack.map((x) => <Chip key={x}>{x}</Chip>)}</div></div>
+          </div>
         </section>
-        <section className="relative z-20 grid gap-8 border-t border-[var(--l-ink)]/80 px-5 py-12 sm:mx-12 sm:px-0 lg:grid-cols-2">
-          <h2 className="text-2xl">Highlights <sup className="font-mono text-[11px]">[{s.highlights.length}]</sup></h2>
-          <ul>
-            {s.highlights.map(([k, v]) => (
-              <li key={k} className="flex items-baseline justify-between border-b border-[var(--l-ink)]/70 py-4">
-                <span className="font-serif text-[clamp(19px,1.6vw,26px)]">{k}</span>
-                <span className="font-mono text-[11px] uppercase">{v}</span>
-              </li>
-            ))}
-          </ul>
+
+        <section className="relative z-20 grid gap-12 px-5 py-20 sm:px-12 lg:grid-cols-2">
+          <div>
+            <Label className="text-indigo-700">How it works</Label>
+            <p className="mt-5 font-serif text-[clamp(22px,2vw,32px)] leading-[1.25]">{s.what}.</p>
+          </div>
+          <div>
+            <Label className="text-indigo-700">What you&apos;ll see</Label>
+            <ul className="mt-5 space-y-3">
+              {s.highlights.map(([k, v]) => (
+                <li key={k} className="flex items-start gap-3 rounded-2xl border border-[var(--l-line)] bg-white/70 p-4">
+                  <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-teal-400 text-[#06302c]"><Check size={14} strokeWidth={3} /></span>
+                  <span className="flex-1 text-[15px]">{k}</span>
+                  <span className="text-xs text-[var(--l-muted)]">{v}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
-        <div className="relative z-20 flex justify-center pb-24 pt-8"><DemoForm>Try it in the live demo <Hook /></DemoForm></div>
+
+        <section className="relative z-20 grid gap-4 px-5 pb-8 sm:grid-cols-2 sm:px-12">
+          {[["Previous", prev], ["Next", next]].map(([label, x]) => {
+            const sc = x as typeof s;
+            return (
+              <Link key={label as string} href={`/screens/${sc.slug}`} className="group flex items-center justify-between gap-4 rounded-3xl border border-[var(--l-line)] bg-white/70 p-6 transition hover:border-indigo-300">
+                <span><span className="block text-xs text-[var(--l-muted)]">{label as string}</span><span className="font-serif text-2xl group-hover:text-indigo-700">{sc.name}</span></span>
+                <Go />
+              </Link>
+            );
+          })}
+        </section>
+        <div className="relative z-20 px-5 sm:px-12"><ButtonLink href="/screens" ghost>Back to the conveyor</ButtonLink></div>
       </div>
-      <SiteFooter aiNote={aiNote} next={{ href: `/screens/${next.slug}`, label: next.name }} revealBg="radial-gradient(60% 55% at 50% 55%, #7c3aed66 0%, #1a0b3a 45%, #05030c 100%)" />
+      <SiteFooter aiNote={aiNote} next={{ href: `/screens/${next.slug}`, label: next.name }} />
       <GuideOrb />
     </main>
   );

@@ -1,15 +1,14 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { CornerDownRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { IntroGate } from "@/components/intro-gate";
 import { AmbientWhileMounted } from "@/components/sound";
 import { World } from "@/components/landing/world";
 import { SmokeCursor } from "@/components/landing/smoke-cursor";
-import { Badge3D, GuideOrb, LandingSettingsProvider, Reveal, ScrollFillText, SmoothScroll, useLanding } from "@/components/landing/bits";
-import { Arrow, BIG, BIG_SIZE, Caption, DAY, DemoForm, GlassLink, GlitchDefs, Header, Hook, NIGHT, Pill, ProductShot, SiteFooter } from "@/components/landing/site";
-import { PROOF, SCREENS, SERVICES } from "@/components/landing/content";
+import { GuideOrb, LandingSettingsProvider, Reveal, ScrollFillText, SmoothScroll, useLanding } from "@/components/landing/bits";
+import { ButtonLink, CountUp, DAY, DemoForm, Go, HEAD, HEAD_SIZE, Header, Label, Lede, Mark, NIGHT, ProductShot, SiteFooter, SUB_SIZE } from "@/components/landing/site";
+import { PROOF, SCREENS } from "@/components/landing/content";
 
 interface Props { hasSession: boolean; showGate: boolean; aiNote: string; expired: boolean }
 
@@ -21,111 +20,17 @@ export function Landing(props: Props) {
   );
 }
 
-// list on the right of "What it does": the row nearest the middle of the screen is in focus
-function FocusList({ items }: { items: string[] }) {
-  const refs = useRef<(HTMLLIElement | null)[]>([]);
-  const [state, setState] = useState<{ op: number[]; active: number }>({ op: items.map(() => 0.2), active: -1 });
-  useEffect(() => {
-    const onScroll = () => {
-      const mid = window.innerHeight * 0.55;
-      let best = -1, bestD = Infinity;
-      const op = refs.current.map((el, i) => {
-        if (!el) return 0.2;
-        const r = el.getBoundingClientRect();
-        const d = Math.abs(r.top + r.height / 2 - mid);
-        if (d < bestD) { bestD = d; best = i; }
-        return Math.max(0.12, 1 - d / (window.innerHeight * 0.42));
-      });
-      setState({ op, active: best });
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  return (
-    <ol>
-      {items.map((s, i) => (
-        <li key={s} ref={(el) => { refs.current[i] = el; }} className="flex items-center justify-between gap-6 py-[18px] transition-opacity duration-300" style={{ opacity: state.op[i] }}>
-          <span className="w-12 font-mono text-[11px] text-[var(--l-muted)]">
-            {state.active === i ? <CornerDownRight size={20} strokeWidth={1.4} className="text-[var(--l-ink)]" /> : `(${String(i + 1).padStart(3, "0")})`}
-          </span>
-          <span className="text-right font-sans text-[clamp(19px,1.65vw,27px)] tracking-tight">{s}</span>
-        </li>
-      ))}
-    </ol>
-  );
-}
+// six real kinds of finding, from the demo's fictional brand
+const CHECKS: { area: string; rule: string; bad: string; fix: string }[] = [
+  { area: "Tone of voice", rule: "TON-03", bad: "Act now or miss out forever!", fix: "Switch this Diwali and get cashback on every payment." },
+  { area: "Brand terms", rule: "TRM-01", bad: "Download Nimbus pay today", fix: "Download Nimbus Pay today" },
+  { area: "Facts & offers", rule: "LEG-01 · F-041", bad: "5% cashback till 31 Oct", fix: "3% cashback, up to ₹150, till 30 Nov" },
+  { area: "Claims", rule: "CLM-04", bad: "India's fastest UPI app", fix: "UPI payments that complete in about 2 seconds" },
+  { area: "Visuals", rule: "ACC-01", bad: "Image text contrast 1.6 : 1", fix: "Raise contrast to at least 4.5 : 1" },
+  { area: "Accessibility", rule: "ACC-03", bad: "No alt text on the offer image", fix: "Add alt text that states the offer" },
+];
 
-function ScreenTile({ i, className }: { i: number; className?: string }) {
-  const s = SCREENS[i];
-  return (
-    <Link href={`/screens/${s.slug}`} className={clsx("group block", className)}>
-      <ProductShot screen={s} />
-      <div className="mt-5 font-mono text-[11px] font-medium uppercase tracking-[0.12em]">{s.tags}</div>
-      <div className="mt-2 flex items-center font-serif text-[clamp(24px,2.1vw,34px)] leading-tight">
-        <span className="inline-block w-0 overflow-hidden transition-all duration-300 group-hover:mr-3 group-hover:w-6"><CornerDownRight size={22} strokeWidth={1.4} /></span>
-        {s.name}
-      </div>
-    </Link>
-  );
-}
-
-function Proof() {
-  const [active, setActive] = useState(0);
-  const groupRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [badgeTop, setBadgeTop] = useState(40);
-  useEffect(() => {
-    const onScroll = () => {
-      const mid = window.innerHeight * 0.5;
-      groupRefs.current.forEach((el, i) => {
-        if (!el) return;
-        const r = el.getBoundingClientRect();
-        if (r.top < mid && r.bottom > mid) setActive(i);
-      });
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  useEffect(() => {
-    const el = groupRefs.current[active];
-    if (el) setBadgeTop(el.offsetTop + 30);
-  }, [active]);
-  return (
-    <section id="proof" className="px-5 pb-28 sm:px-12">
-      <div className="grid items-end gap-8 lg:grid-cols-[1fr_1fr]">
-        <h2 className={BIG} style={BIG_SIZE}>Proof &amp;<br />numbers</h2>
-        <div className="flex flex-wrap items-end justify-between gap-6 pb-2">
-          <Caption>Measured on a 44-sample labelled test set and tested end to end on the live site</Caption>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-white">» Caught: 58/58</span>
-        </div>
-      </div>
-      <div className="relative mt-12 border-t border-[var(--l-ink)]/80">
-        <div className="pointer-events-none absolute left-[22%] hidden h-72 w-60 transition-[top] duration-700 ease-[cubic-bezier(.2,.7,.1,1)] lg:block" style={{ top: badgeTop }}>
-          <Badge3D className="h-full w-full" />
-        </div>
-        {PROOF.map((g, gi) => (
-          <div
-            key={g.group}
-            ref={(el) => { groupRefs.current[gi] = el; }}
-            onMouseEnter={() => setActive(gi)}
-            className={clsx("grid grid-cols-1 border-b border-[var(--l-line)] transition-opacity duration-500 lg:grid-cols-2", active === gi ? "opacity-100" : "opacity-35")}
-          >
-            <div className="py-5 font-sans text-[clamp(20px,1.7vw,26px)] uppercase tracking-tight">{g.group} <sup className="font-mono text-[11px]">[{g.count}]</sup></div>
-            <ul>
-              {g.rows.map(([k, v]) => (
-                <li key={k} className="flex items-baseline justify-between border-b border-[var(--l-ink)]/70 py-4 last:border-b-0">
-                  <span className="font-serif text-[clamp(19px,1.5vw,25px)]">{k}</span>
-                  <span className="font-mono text-xs font-medium">{v}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-      <div className="mt-24 flex justify-center"><DemoForm>Open the live demo <Hook /></DemoForm></div>
-    </section>
-  );
-}
+const STATS: [string, string][] = [["100%", "Precision of the rule-based checks"], ["100%", "Recall once the AI review is on"], ["0", "False flags on clean controls"], ["₹0", "To run, on free tiers"]];
 
 function Inner({ hasSession, showGate, aiNote, expired }: Props) {
   const { theme, quality } = useLanding();
@@ -133,125 +38,158 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
 
   return (
     <main id="top" className="relative min-h-screen bg-[var(--l-bg)] text-white" style={vars}>
-      <GlitchDefs />
       <SmoothScroll />
       {showGate && <IntroGate />}
       <AmbientWhileMounted />
       <World theme={theme} quality={quality} containerId="world" sections={5} />
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent" />
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-0 h-1/2 bg-gradient-to-t from-[#0b0f2a]/40 to-transparent" />
       <Header hasSession={hasSession} />
 
-      {/* ------------------------------------------------ the meadow */}
+      {/* ------------------------------------------------ the meadow at dawn */}
       <div id="world" className="relative z-10">
-        <section className="relative flex h-screen flex-col justify-end px-5 pb-12 sm:px-12">
-          <Caption className="mb-12 drop-shadow">Pre-publication brand governance<br />for the brands of tomorrow</Caption>
+        <section className="relative flex h-screen flex-col justify-end px-5 pb-14 sm:px-12">
           {expired && <p className="mb-4 text-sm text-amber-200">Your sandbox wasn&apos;t found. Start a new one from the top right.</p>}
-          <div className="grid grid-cols-1 items-start gap-x-[8vw] sm:grid-cols-[auto_1fr]" style={BIG_SIZE}>
-            <Reveal className={BIG}><span className="normal-case italic">Where</span></Reveal>
-            <div className="sm:mt-[0.9em]">
-              <Reveal className={BIG} delay={80}>Every word, image</Reveal>
-              <Reveal className={BIG} delay={160}>and claim is checked</Reveal>
-              <Reveal className={BIG} delay={240}>before it goes live</Reveal>
-            </div>
+          <Label>Pre-publication brand governance</Label>
+          <div className="mt-5 max-w-4xl" style={HEAD_SIZE}>
+            <Reveal className={HEAD}>Every word, image and claim,</Reveal>
+            <Reveal className={HEAD} delay={100}><Mark>checked</Mark> before it goes live.</Reveal>
+          </div>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <DemoForm>Try the demo <Go /></DemoForm>
+            <ButtonLink href="/about" ghost>How it works</ButtonLink>
           </div>
         </section>
 
         <section className="relative flex h-screen flex-col justify-center px-5 sm:px-12">
-          <Pill>Approach</Pill>
-          <div className="mt-8" style={BIG_SIZE}>
-            <Reveal className={BIG}><span className="normal-case italic">We</span> check</Reveal>
-            <Reveal className={BIG} delay={80}><Arrow className="mr-[1.2em]" /> more than</Reveal>
-            <Reveal className={BIG} delay={160}>spelling and</Reveal>
-            <Reveal className={BIG} delay={240}>style</Reveal>
-          </div>
-          <Caption className="mt-10">Tone, terms, facts, claims, visuals and accessibility, checked against your own rulebook</Caption>
-        </section>
-
-        <section className="relative flex h-screen flex-col justify-end px-5 pb-12 sm:px-12">
-          <Pill>Evidence</Pill>
-          <div className="mt-6 flex flex-wrap items-end justify-between gap-8">
-            <div style={BIG_SIZE}>
-              <Reveal className={BIG}>No source</Reveal>
-              <Reveal className={BIG} delay={100}><Arrow className="mr-[1.2em]" /> no flag</Reveal>
-            </div>
-            <Caption className="mb-2 mr-[10vw]">Every flag quotes the text and cites a rule or an approved fact. A verifier drops the rest</Caption>
+          <Label>What it checks</Label>
+          <div className="mt-5 max-w-2xl" style={HEAD_SIZE}>
+            <Reveal className={HEAD}>Tone, terms, facts, claims,</Reveal>
+            <Reveal className={HEAD} delay={100}>visuals and accessibility,</Reveal>
+            <Reveal className={HEAD} delay={200}>against <Mark>your</Mark> rulebook.</Reveal>
           </div>
         </section>
 
-        <section className="relative flex h-screen flex-col items-end justify-center px-5 sm:px-12">
-          <div className="w-full max-w-[42vw] min-w-[300px]">
-            <Pill>Fixes</Pill>
-            <div className="mt-6" style={BIG_SIZE}>
-              <Reveal className={BIG}>Rewrites <span className="normal-case italic">With</span></Reveal>
-              <Reveal className={BIG} delay={100}>an intent</Reveal>
+        <section className="relative flex h-screen flex-col justify-end px-5 pb-14 sm:px-12">
+          <div className="flex flex-wrap items-end justify-between gap-8">
+            <div>
+              <Label>Evidence</Label>
+              <div className="mt-5" style={HEAD_SIZE}>
+                <Reveal className={HEAD}>No source, <Mark>no flag.</Mark></Reveal>
+              </div>
             </div>
-            <Caption className="mt-8">Suggestions keep the creator&apos;s goal, message and call to action, and are re-checked before you see them</Caption>
+            <Lede className="mb-2 max-w-sm">Every finding quotes the exact words and cites a page of the rulebook or an approved fact. A verifier drops anything it can&apos;t trace.</Lede>
           </div>
         </section>
 
-        <section className="relative flex h-screen flex-col justify-end px-5 pb-12 sm:px-12">
-          <Pill>People</Pill>
-          <Caption className="mt-6">AI suggests.<br />People decide.</Caption>
-          <div className="mt-10 grid grid-cols-1 items-start gap-x-[10vw] sm:grid-cols-[auto_1fr]" style={BIG_SIZE}>
-            <Reveal className={BIG}><span className="normal-case italic">We</span> <Arrow /></Reveal>
-            <div className="sm:mt-[0.9em]">
-              <Reveal className={BIG} delay={80}>keep people in</Reveal>
-              <Reveal className={BIG} delay={160}>charge of every</Reveal>
-              <Reveal className={BIG} delay={240}>decision</Reveal>
-            </div>
+        <section className="relative flex h-screen flex-col items-end justify-center px-5 text-right sm:px-12">
+          <Label>Fixes</Label>
+          <div className="mt-5 max-w-xl" style={HEAD_SIZE}>
+            <Reveal className={HEAD}>Rewrites that keep</Reveal>
+            <Reveal className={HEAD} delay={100}>what the creator <Mark>meant.</Mark></Reveal>
           </div>
+          <Lede className="mt-6">Goal, message and call to action are locked first, and every suggestion is re-checked before you see it.</Lede>
+        </section>
+
+        <section className="relative flex h-screen flex-col items-center justify-end px-5 pb-16 text-center sm:px-12">
+          <Label>Sign-off</Label>
+          <div className="mt-5" style={HEAD_SIZE}>
+            <Reveal className={HEAD}>AI suggests. <Mark>People decide.</Mark></Reveal>
+          </div>
+          <Lede className="mt-6 text-center">Reviewers and compliance approve in order, overrides need a reason, and every step is written to a tamper-evident log.</Lede>
         </section>
       </div>
 
-      {/* ------------------------------------------------ light sections with the smoke cursor */}
+      {/* ------------------------------------------------ light sections with the cursor trail */}
       <div id="light" data-tone="light" className="relative bg-[var(--l-bg)] text-[var(--l-ink)] transition-colors duration-500">
         <SmokeCursor activeId="light" dark={theme === "night"} />
         <div className="relative z-20">
-          <section id="what" className="px-5 pb-32 pt-28 sm:px-12">
-            <div className="grid gap-16 lg:grid-cols-[1.2fr_1fr]">
+          <section id="what" className="px-5 pb-28 pt-32 sm:px-12">
+            <div className="grid gap-14 lg:grid-cols-[1fr_1.15fr]">
+              <div className="lg:sticky lg:top-32 lg:self-start">
+                <Label className="text-indigo-700">What it does</Label>
+                <ScrollFillText
+                  className="mt-6 font-serif leading-[1.18]" style={SUB_SIZE}
+                  text="Brandrail turns your brand guide into rules software can enforce, then checks every draft against them before it ships. Each flag shows its source and comes with a fix that keeps the creator's meaning, and people make the final call."
+                />
+                <div className="mt-10"><DemoForm>Open the live demo <Go /></DemoForm></div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {CHECKS.map((c) => (
+                  <div key={c.area} className="rounded-2xl border border-[var(--l-line)] bg-white/70 p-5 shadow-[0_10px_30px_-24px_rgba(18,23,53,0.6)] backdrop-blur transition hover:-translate-y-0.5 hover:border-indigo-300">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold">{c.area}</span>
+                      <span className="rounded-md bg-indigo-50 px-2 py-0.5 font-mono text-[10px] text-indigo-700">{c.rule}</span>
+                    </div>
+                    <p className="mt-4 text-[15px] text-rose-700 line-through decoration-rose-400/70">{c.bad}</p>
+                    <p className="mt-2 flex gap-2 text-[15px] text-teal-800"><ArrowRight size={16} className="mt-1 shrink-0" />{c.fix}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section id="screens" className="px-5 pb-28 sm:px-12">
+            <div className="flex flex-wrap items-end justify-between gap-6">
               <div>
-                <div className="relative">
-                  <span className="absolute left-0 top-[0.35em]"><Pill>What it does</Pill></span>
-                  <ScrollFillText
-                    className="font-serif text-[clamp(24px,2.5vw,40px)] leading-[1.15] [text-indent:28%]"
-                    text="↳ Brandrail turns brand guidelines into a living rulebook and checks every word, image and claim before it goes out, from social posts to launch emails. Every flag cites its source, every fix keeps the creator's intent, and people make the final call"
-                  />
+                <Label className="text-indigo-700">Inside the product</Label>
+                <h2 className={clsx(HEAD, "mt-5")} style={HEAD_SIZE}>From first draft to <Mark>verified</Mark> record.</h2>
+              </div>
+              <Link href="/screens" className="inline-flex items-center gap-2 text-[15px] text-indigo-700 hover:underline">All eight screens <Go /></Link>
+            </div>
+            <div className="mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+              {[0, 1, 2, 3, 5, 6].map((i, k) => {
+                const s = SCREENS[i];
+                return (
+                  <Link key={s.slug} href={`/screens/${s.slug}`} className={clsx("group block", k % 3 === 1 && "lg:mt-16")}>
+                    <ProductShot screen={s} />
+                    <div className="mt-4 flex items-baseline justify-between gap-3">
+                      <span className="font-serif text-[clamp(22px,1.9vw,30px)] transition group-hover:text-indigo-700">{s.name}</span>
+                      <span className="text-xs text-[var(--l-muted)]">{s.tags}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          <section id="proof" className="px-5 pb-12 sm:px-12">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <div>
+                <Label className="text-indigo-700">Proof</Label>
+                <h2 className={clsx(HEAD, "mt-5")} style={HEAD_SIZE}>Proof, not <Mark>promises.</Mark></h2>
+              </div>
+              <Lede className="text-[var(--l-muted)]">Measured on a 44-sample labelled test set, then tested end to end on the live site. 58 of 58 blockers caught.</Lede>
+            </div>
+            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {STATS.map(([v, k]) => (
+                <div key={k} className="rounded-3xl bg-[#121735] p-6 text-white">
+                  <CountUp value={v} className="block font-serif text-[clamp(44px,4.6vw,72px)] leading-none" />
+                  <span className="mt-4 block text-sm text-indigo-200">{k}</span>
                 </div>
-                <div className="mt-16"><DemoForm>Open the live demo <Hook /></DemoForm></div>
-              </div>
-              <div className="lg:pt-[34vh]"><FocusList items={SERVICES} /></div>
+              ))}
+            </div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-3">
+              {PROOF.map((g) => (
+                <div key={g.group} className="rounded-3xl border border-[var(--l-line)] bg-white/70 p-6">
+                  <div className="flex items-center justify-between text-sm font-semibold">{g.group}<span className="rounded-full bg-teal-50 px-2 py-0.5 font-mono text-[11px] text-teal-800">{g.count}</span></div>
+                  <ul className="mt-3 divide-y divide-[var(--l-line)]">
+                    {g.rows.map(([k, v]) => (
+                      <li key={k} className="flex items-baseline justify-between gap-4 py-2.5 text-sm">
+                        <span className="text-[var(--l-muted)]">{k}</span>
+                        <span className="font-mono text-xs font-semibold">{v}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           </section>
-
-          <section id="screens" className="px-5 pb-32 sm:px-12">
-            <div className="grid grid-cols-2 items-start gap-y-4 lg:grid-cols-[1fr_1fr_0.6fr_auto]" style={BIG_SIZE}>
-              <h2 className={BIG}>Some</h2>
-              <div>
-                <span className={BIG}><span className="normal-case italic">Of the</span></span>
-                <Caption className="mt-8 hidden lg:block">A look inside the live product, from first draft to verified record</Caption>
-              </div>
-              <span className={clsx(BIG, "hidden text-center lg:block")}>–</span>
-              <h2 className={clsx(BIG, "text-right")}>Screens</h2>
-            </div>
-            <div className="mt-20 hidden grid-cols-12 gap-x-8 md:grid">
-              <ScreenTile i={0} className="col-span-3" />
-              <ScreenTile i={1} className="col-span-2 col-start-7 mt-[16vw]" />
-              <ScreenTile i={2} className="col-span-3 col-start-10" />
-              <ScreenTile i={3} className="col-span-2 col-start-4 -mt-[6vw]" />
-              <ScreenTile i={5} className="col-span-3 col-start-8 mt-[2vw]" />
-            </div>
-            <div className="mt-10 grid gap-12 md:hidden">
-              {[0, 1, 2, 3, 5].map((i) => <ScreenTile key={i} i={i} />)}
-            </div>
-            <div className="mt-20 flex justify-center"><GlassLink href="/screens">All screens <Hook /></GlassLink></div>
-          </section>
-
-          <Proof />
         </div>
       </div>
 
-      <SiteFooter aiNote={aiNote} next={{ href: "/about", label: "About" }} />
+      <SiteFooter aiNote={aiNote} next={{ href: "/about", label: "How it works" }} />
       <GuideOrb />
     </main>
   );
 }
+

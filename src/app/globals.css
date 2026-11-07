@@ -136,27 +136,10 @@ html.lenis { scroll-behavior: auto; }
 .lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
 .lenis.lenis-smooth iframe { pointer-events: none; }
 
-/* landing: sound bars and the RGB-split glitch on product shots */
+/* landing: sound bars */
 @keyframes eq { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
 .eq-bar { animation: eq 0.9s ease-in-out infinite; }
-@keyframes glitch-r {
-  0% { clip-path: inset(8% 0 72% 0); translate: -7px 0; }
-  20% { clip-path: inset(46% 0 30% 0); translate: 6px 0; }
-  40% { clip-path: inset(70% 0 6% 0); translate: -4px 0; }
-  60% { clip-path: inset(22% 0 58% 0); translate: 8px 0; }
-  80% { clip-path: inset(58% 0 20% 0); translate: -6px 0; }
-  100% { clip-path: inset(8% 0 72% 0); translate: -7px 0; }
-}
-@keyframes glitch-c {
-  0% { clip-path: inset(60% 0 14% 0); translate: 7px 0; }
-  25% { clip-path: inset(12% 0 66% 0); translate: -6px 0; }
-  50% { clip-path: inset(36% 0 40% 0); translate: 5px 0; }
-  75% { clip-path: inset(80% 0 2% 0); translate: -8px 0; }
-  100% { clip-path: inset(60% 0 14% 0); translate: 7px 0; }
-}
-.shot:hover .glitch-r { animation: glitch-r 0.8s steps(1) infinite; }
-.shot:hover .glitch-c { animation: glitch-c 0.65s steps(1) infinite; }
-@media (prefers-reduced-motion: reduce) { .shot:hover .glitch-r, .shot:hover .glitch-c, .eq-bar { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .eq-bar { animation: none; } }
 .text-silver {
   background: linear-gradient(180deg, #ffffff 0%, #ddd9f5 60%, #b9b3e3 100%);
   -webkit-background-clip: text;

@@ -1,12 +1,10 @@
 "use client";
 // Small interaction pieces for the landing page: smooth scrolling, line reveals,
-// scroll-filled text, the settings menu, the guide orb and the rotating 3D badge.
+// scroll-filled text, the settings menu and the guide.
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { Settings, Sparkles, X } from "lucide-react";
-import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { MessageCircleQuestion, Settings, X } from "lucide-react";
+import { LogoMark } from "@/components/ui";
 import { useSound } from "@/components/sound";
 import type { Quality, Theme } from "./world";
 
@@ -75,7 +73,7 @@ export function Reveal({ children, className, delay = 0, as: Tag = "div" }: { ch
 }
 
 // ------------------------------------------------------------- text that fills word by word as you scroll
-export function ScrollFillText({ text, className }: { text: string; className?: string }) {
+export function ScrollFillText({ text, className, style }: { text: string; className?: string; style?: React.CSSProperties }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const [k, setK] = useState(0);
   const words = text.split(" ");
@@ -93,7 +91,7 @@ export function ScrollFillText({ text, className }: { text: string; className?: 
     return () => window.removeEventListener("scroll", onScroll);
   }, [words.length]);
   return (
-    <p ref={ref} className={className}>
+    <p ref={ref} className={className} style={style}>
       {words.map((w, i) => (
         <span key={i} className="transition-colors duration-300" style={{ color: i < k ? "var(--l-ink)" : "var(--l-faint)" }}>{w} </span>
       ))}
@@ -115,18 +113,18 @@ export function SettingsMenu() {
   const Row = ({ label, on, onClick }: { label: string; on: boolean; onClick: () => void }) => (
     <button onClick={() => { onClick(); play("tick"); }} className="flex w-full items-center justify-between gap-6 rounded-lg px-3 py-2 text-left hover:bg-white/10">
       <span>{label}</span>
-      <span className={clsx("relative h-4 w-7 rounded-full transition", on ? "bg-violet-500" : "bg-white/25")}>
+      <span className={clsx("relative h-4 w-7 rounded-full transition", on ? "bg-teal-400" : "bg-white/25")}>
         <span className={clsx("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", on ? "left-3.5" : "left-0.5")} />
       </span>
     </button>
   );
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen(!open)} aria-expanded={open} className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] hover:opacity-80">
-        <Settings size={14} /> Settings
+      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Settings" className="grid h-9 w-9 place-items-center rounded-full transition hover:bg-current/10">
+        <Settings size={17} strokeWidth={1.6} />
       </button>
       {open && (
-        <div className="fade-up absolute left-1/2 top-8 z-40 w-56 -translate-x-1/2 rounded-2xl border border-white/15 bg-[#1b1240]/85 p-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-white shadow-2xl backdrop-blur-xl">
+        <div className="fade-up absolute right-0 top-11 z-40 w-56 rounded-2xl border border-white/15 bg-[#11163a]/95 p-1.5 text-sm text-white shadow-2xl backdrop-blur-xl">
           <Row label="Sound" on={enabled} onClick={() => setEnabled(!enabled)} />
           <Row label="Dark mode" on={theme === "night"} onClick={() => setTheme(theme === "night" ? "day" : "night")} />
           <Row label="High quality" on={quality === "high"} onClick={() => setQuality(quality === "high" ? "low" : "high")} />
@@ -153,102 +151,30 @@ export function GuideOrb() {
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
       {open && (
-        <div className="fade-up w-80 rounded-3xl border border-white/20 bg-[#1b1240]/90 p-4 text-sm text-slate-200 shadow-2xl backdrop-blur-xl">
+        <div className="fade-up w-80 rounded-3xl border border-white/15 bg-[#11163a]/95 p-4 text-sm text-slate-200 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-violet-300">Brandrail guide</span>
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-white"><LogoMark size={20} /> Ask Brandrail</span>
             <button onClick={() => setOpen(false)} aria-label="Close guide"><X size={15} /></button>
           </div>
           <p className="mt-2 text-slate-300">{answer === null ? "Hi! Ask me anything about the demo." : FAQ[answer][1]}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {FAQ.map(([q], i) => (
-              <button key={q} onClick={() => { setAnswer(i); play("tick"); }} className={clsx("rounded-full border px-2.5 py-1 text-xs transition", answer === i ? "border-violet-400 bg-violet-500/30 text-white" : "border-white/15 hover:bg-white/10")}>
+              <button key={q} onClick={() => { setAnswer(i); play("tick"); }} className={clsx("rounded-full border px-2.5 py-1 text-xs transition", answer === i ? "border-teal-300 bg-teal-400/20 text-white" : "border-white/15 hover:bg-white/10")}>
                 {q}
               </button>
             ))}
           </div>
         </div>
       )}
-      {bubble && !open && (
-        <div className="fade-up hidden max-w-[240px] rounded-2xl bg-gradient-to-r sm:block from-violet-500 to-fuchsia-500 px-3.5 py-2.5 font-mono text-[10px] uppercase leading-relaxed tracking-[0.1em] text-white shadow-xl">
-          Hi! I&apos;m the Brandrail guide. Ask me how to test the demo.
-        </div>
-      )}
       <button
         onClick={() => { setOpen(!open); setBubble(false); play("tick"); }}
         aria-label="Open the Brandrail guide"
-        className="group relative h-14 w-14 rounded-full shadow-[0_8px_30px_-6px_rgba(168,85,247,0.7)] transition hover:scale-105"
-        style={{ background: "radial-gradient(circle at 32% 28%, #ffffff 0%, #f5d0fe 18%, #c084fc 45%, #7c3aed 75%, #4c1d95 100%)" }}
+        className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-[#11163a]/90 py-1.5 pl-1.5 pr-4 text-sm text-white shadow-[0_12px_30px_-10px_rgba(18,23,53,0.7)] backdrop-blur transition hover:bg-[#1b2150]"
       >
-        <span className="absolute inset-1 animate-[spin-slow_9s_linear_infinite] rounded-full opacity-70" style={{ background: "conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,.75) 40deg, transparent 90deg, transparent 220deg, rgba(240,171,252,.7) 270deg, transparent 320deg)" }} />
-        <Sparkles size={16} className="absolute inset-0 m-auto text-white/90" />
+        <LogoMark size={28} />
+        <span className="hidden sm:inline">{bubble ? "Ask how to test the demo" : "Ask Brandrail"}</span>
+        <MessageCircleQuestion size={16} className="sm:hidden" />
       </button>
     </div>
   );
-}
-
-// ------------------------------------------------------------- rotating 3D badge (Brandrail mark)
-export function Badge3D({ className }: { className?: string }) {
-  const host = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = host.current;
-    if (!el) return;
-    let renderer: THREE.WebGLRenderer;
-    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch { return; }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(el.clientWidth, el.clientHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    el.appendChild(renderer.domElement);
-    const scene = new THREE.Scene();
-    // soft studio reflections so the glossy shield reads as lavender glass, not a black slab
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    const room = new RoomEnvironment();
-    const env = pmrem.fromScene(room, 0.04).texture;
-    scene.environment = env;
-    const cam = new THREE.PerspectiveCamera(35, el.clientWidth / el.clientHeight, 0.1, 50);
-    cam.position.set(0, 0, 9);
-    scene.add(new THREE.HemisphereLight("#ffffff", "#c4b5fd", 1.2));
-    const d = new THREE.DirectionalLight("#ffffff", 1.6);
-    d.position.set(3, 4, 5);
-    scene.add(d);
-    // a dark glossy slab carrying the Brandrail check mark
-    const geo = new RoundedBoxGeometry(1.7, 2.7, 0.42, 6, 0.12);
-    const bodyMat = new THREE.MeshPhysicalMaterial({ color: "#0e0b14", roughness: 0.32, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.1, envMapIntensity: 0.35 });
-    const body = new THREE.Mesh(geo, bodyMat);
-    const check = new THREE.Shape();
-    check.moveTo(-0.62, 0.05); check.lineTo(-0.22, -0.38); check.lineTo(0.66, 0.55); check.lineTo(0.48, 0.72);
-    check.lineTo(-0.22, -0.02); check.lineTo(-0.44, 0.24); check.closePath();
-    const cGeo = new THREE.ExtrudeGeometry(check, { depth: 0.12, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2 });
-    const markMat = new THREE.MeshStandardMaterial({ color: "#a855f7", emissive: "#7c3aed", emissiveIntensity: 0.55, roughness: 0.3, metalness: 0.1 });
-    const mark = new THREE.Mesh(cGeo, markMat);
-    mark.position.set(0, -0.35, 0.21);
-    mark.scale.setScalar(0.95);
-    const back = new THREE.Mesh(cGeo, markMat); // same mark on the back face, mirrored
-    back.rotation.y = Math.PI;
-    back.position.set(0, -0.35, -0.21);
-    back.scale.setScalar(0.95);
-    const group = new THREE.Group();
-    group.add(body, mark, back);
-    scene.add(group);
-    let mx = 0, my = 0;
-    const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; };
-    window.addEventListener("pointermove", onMove);
-    let raf = 0;
-    const clock = new THREE.Clock();
-    const loop = () => {
-      raf = requestAnimationFrame(loop);
-      const t = clock.getElapsedTime();
-      group.rotation.y = t * 0.6 + mx * 0.8;
-      group.rotation.x = Math.sin(t * 0.7) * 0.15 + my * 0.5;
-      group.rotation.z = -0.25;
-      renderer.render(scene, cam);
-    };
-    loop();
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("pointermove", onMove);
-      geo.dispose(); cGeo.dispose(); bodyMat.dispose(); markMat.dispose(); env.dispose(); pmrem.dispose(); room.dispose();
-      renderer.dispose(); renderer.domElement.remove();
-    };
-  }, []);
-  return <div ref={host} className={className} aria-hidden="true" />;
 }
