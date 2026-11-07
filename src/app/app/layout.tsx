@@ -45,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="bg-dots flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-white/80 px-4 py-2.5 backdrop-blur-md sm:px-6">
           <Link href="/app" className="md:hidden"><Logo /></Link>
           <div className="hidden items-center gap-2 text-xs text-muted md:flex">
