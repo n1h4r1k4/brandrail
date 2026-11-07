@@ -40,7 +40,11 @@ async function predict(item: (typeof GOLDEN)[number]): Promise<Row> {
 function score(rows: Row[], filter?: (code: string) => boolean) {
   let tp = 0, fp = 0, fn = 0;
   for (const r of rows) {
-    for (const p of r.predicted) if (!filter || filter(p)) (r.expected.has(p) ? tp++ : fp++);
+    for (const p of r.predicted) {
+      if (filter && !filter(p)) continue;
+      if (r.expected.has(p)) tp++;
+      else fp++;
+    }
     for (const e of r.expected) if ((!filter || filter(e)) && !r.predicted.has(e)) fn++;
   }
   const precision = tp + fp ? tp / (tp + fp) : 1;
