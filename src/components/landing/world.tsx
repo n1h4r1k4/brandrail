@@ -137,6 +137,15 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     } catch {
       return;
     }
+    // Without a graphics card (software rendering) this scene would freeze the page, so keep the
+    // painted backdrop instead.
+    const gl = renderer.getContext();
+    const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+    const gpu = String(dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(gpu) && !window.location.search.includes("force3d")) {
+      renderer.dispose();
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, hi ? 1.5 : 1));
     renderer.setSize(el.clientWidth, el.clientHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -415,12 +424,14 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     const v3 = (a: number[]) => new THREE.Vector3(a[0], a[1], a[2]);
     const camPos = new THREE.Vector3(), look = new THREE.Vector3(), scPos = new THREE.Vector3();
     const clock = new THREE.Clock();
-    let lastNow = 0;
+    let lastNow = 0, gateUp = true;
     let raf = 0;
 
     const frame = () => {
       raf = requestAnimationFrame(frame);
       if (!visible || document.hidden) return;
+      if (gateUp && document.querySelector("[aria-label='Enter Brandrail']")) return; // wait behind the intro screen
+      gateUp = false;
       const now = clock.getElapsedTime();
       const dt = Math.min(0.5, now - lastNow);
       lastNow = now;

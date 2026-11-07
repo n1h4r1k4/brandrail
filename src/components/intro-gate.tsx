@@ -5,11 +5,16 @@ import { Volume2, VolumeX } from "lucide-react";
 import { useSound } from "./sound";
 import { LogoMark } from "./ui";
 
-/** Loader, then the choice to enter with or without sound. Remembered for the browser session. */
+// Set once the visitor has entered, so pages opened afterwards (including ones prefetched before
+// the cookie existed) never show the gate again.
+let entered = false;
+const hasEntered = () => entered || (typeof document !== "undefined" && /(?:^|; )br_gate=/.test(document.cookie));
+
+/** Loader, then the choice to enter with or without sound. Shown once, remembered for six hours. */
 export function IntroGate() {
   const { setEnabled, play } = useSound();
   const [pct, setPct] = useState(0);
-  const [phase, setPhase] = useState<"loading" | "choose" | "leaving" | "gone">("loading");
+  const [phase, setPhase] = useState<"loading" | "choose" | "leaving" | "gone">(() => (hasEntered() ? "gone" : "loading"));
 
   useEffect(() => {
     document.documentElement.style.overflow = phase === "gone" ? "" : "hidden";
@@ -19,8 +24,10 @@ export function IntroGate() {
   useEffect(() => {
     if (phase !== "loading") return;
     let v = 0;
+    const started = Date.now();
     const id = window.setInterval(() => {
-      const target = document.readyState === "complete" ? 100 : 86;
+      // finish when the page has loaded, or after 2.5 s whatever happens, so it can never stall
+      const target = document.readyState === "complete" || Date.now() - started > 2500 ? 100 : 86;
       v = Math.min(target, v + Math.max(1, (target - v) * 0.12));
       setPct(Math.round(v));
       if (v >= 100) {
@@ -37,6 +44,7 @@ export function IntroGate() {
     setEnabled(withSound);
     if (withSound) window.setTimeout(() => play("enter"), 60);
     document.cookie = "br_gate=1; path=/; max-age=21600; samesite=lax";
+    entered = true;
     setPhase("leaving");
     window.setTimeout(() => setPhase("gone"), 1000);
   };

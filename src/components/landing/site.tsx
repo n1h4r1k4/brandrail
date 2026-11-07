@@ -191,20 +191,30 @@ export function KeepScrolling({ className }: { className?: string }) {
 function useScrollOn(href: string, enabled: boolean) {
   const router = useRouter();
   const [p, setP] = useState(0);
+  const [leaving, setLeaving] = useState(false);
   useEffect(() => {
     if (!enabled) return;
     router.prefetch(href);
     let acc = 0, done = false, touchY: number | null = null, idle = 0;
+    // armed only once the visitor has scrolled down this page themselves, so momentum carried
+    // over from the previous page can never skip straight through this one
+    let travelled = 0, lastY = window.scrollY;
+    const mountedAt = Date.now();
+    const armed = () => Date.now() - mountedAt > 1200 && travelled > window.innerHeight * 1.5;
     const atBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 6;
     const push = (d: number) => {
       if (done) return;
-      if (!atBottom()) { acc = 0; setP(0); return; }
+      if (!armed() || !atBottom()) { acc = 0; setP(0); return; }
       acc = Math.max(0, acc + d);
       const v = Math.min(1, acc / 700);
       setP(v);
       window.clearTimeout(idle);
       idle = window.setTimeout(() => { if (!done) { acc = 0; setP(0); } }, 1600);
-      if (v >= 1) { done = true; router.push(href); }
+      if (v >= 1) {
+        done = true;
+        setLeaving(true); // brief fade, then the next page
+        window.setTimeout(() => router.push(href), 280);
+      }
     };
     const onWheel = (e: WheelEvent) => push(e.deltaY);
     const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0].clientY; };
@@ -215,7 +225,11 @@ function useScrollOn(href: string, enabled: boolean) {
       touchY = y;
     };
     const onKey = (e: KeyboardEvent) => { if (["ArrowDown", "PageDown", " ", "End"].includes(e.key)) push(180); };
-    const onScroll = () => { if (!atBottom()) { acc = 0; setP(0); } };
+    const onScroll = () => {
+      travelled += Math.max(0, window.scrollY - lastY);
+      lastY = window.scrollY;
+      if (!atBottom()) { acc = 0; setP(0); }
+    };
     window.addEventListener("wheel", onWheel, { passive: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
@@ -230,17 +244,18 @@ function useScrollOn(href: string, enabled: boolean) {
       window.removeEventListener("scroll", onScroll);
     };
   }, [href, enabled, router]);
-  return p;
+  return { progress: p, leaving };
 }
 
 export function SiteFooter({ aiNote, next, auto = false }: { aiNote: string; next: { href: string; label: string }; auto?: boolean }) {
-  const progress = useScrollOn(next.href, auto);
+  const { progress, leaving } = useScrollOn(next.href, auto);
   const cols: { title: string; items: [string, string, boolean?][] }[] = [
     { title: "Product", items: [["Live demo", "/app"], ["Screens", "/screens"], ["How it works", "/about"]] },
     { title: "Source", items: [["GitHub", "https://github.com/n1h4r1k4/brandrail", true], ["README", "https://github.com/n1h4r1k4/brandrail#readme", true]] },
   ];
   return (
     <footer id="contact" data-tone="light" className="relative bg-[var(--l-bg)] px-5 pb-10 pt-24 text-[var(--l-ink)] sm:px-12">
+      <div aria-hidden="true" className={clsx("pointer-events-none fixed inset-0 z-[60] bg-[#070b22] transition-opacity duration-300", leaving ? "opacity-100" : "opacity-0")} />
       <div className="relative overflow-hidden rounded-[32px] bg-[var(--l-tile)] px-6 py-16 text-white sm:px-14">
         <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-indigo-500/40 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-teal-400/30 blur-3xl" />

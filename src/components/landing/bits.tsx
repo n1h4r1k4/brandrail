@@ -33,6 +33,7 @@ export function LandingSettingsProvider({ children }: { children: React.ReactNod
 // ------------------------------------------------------------- smooth scroll
 export function SmoothScroll() {
   useEffect(() => {
+    if (!window.location.hash) window.scrollTo(0, 0); // a newly opened page starts at the top
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf = 0;
     let lenis: { raf: (t: number) => void; destroy: () => void } | null = null;
