@@ -20,6 +20,8 @@ async function connect(): Promise<DB> {
     return drizzle(client, { schema }) as unknown as DB;
   }
   // Local development: embedded Postgres (PGlite) stored in ./.data
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync("./.data", { recursive: true });
   const { PGlite } = await import("@electric-sql/pglite");
   const { drizzle } = await import("drizzle-orm/pglite");
   const client = new PGlite("./.data/pglite");

@@ -115,7 +115,7 @@ export const SEED_RULES: SeedRule[] = [
         "100\\s?% (?:secure|safe|protected|fraud[- ]proof)", "(?:completely|totally|absolutely) (?:safe|secure)",
         "zero risk", "risk[- ]free(?! returns?)", "unhackable", "can never be hacked", "fraud[- ]proof",
       ],
-      replacement: "protected with bank-grade 256-bit encryption",
+      replacement: "bank-grade encrypted",
     },
   },
   {
@@ -353,43 +353,58 @@ export const SAMPLES: Sample[] = [
 
 // Historical pieces seeded so Insights and Guideline Health have data on day one.
 // They are clearly labelled as seeded demo history in the UI.
+//  - outcome "approved" without `revised`: approved in the first review round
+//  - with `revised`: changes requested in round 1, the revised text approved in round 2
+//  - disputes: the creator disputed that rule; `upheld` = the reviewer agreed and overrode it
 export interface HistoryItem {
   title: string;
   channel: string;
+  audience: string;
   source: ContentSource;
   body: string;
+  revised?: string;
   daysAgo: number;
-  outcome: "approved-first" | "approved-second" | "in_review" | "changes_requested";
+  outcome: "approved" | "in_review" | "changes_requested";
   disputes?: { ruleCode: string; reason: string; upheld: boolean }[];
+  reviewNote?: string;
 }
 
 export const HISTORY: HistoryItem[] = [
-  { title: "Holi festive banner copy", channel: "Instagram", source: "agency", daysAgo: 40, outcome: "approved-second",
+  { title: "Holi festive banner copy", channel: "Instagram", audience: "Young salaried users", source: "agency", daysAgo: 40, outcome: "approved",
     body: "Celebrate Holi with Nimbus Pay! Don't miss out on colourful savings this week.",
     disputes: [{ ruleCode: "TON-03", reason: "Festive campaign: celebratory urgency, not fear.", upheld: true }] },
-  { title: "Independence Day push notification", channel: "Push", source: "ai", daysAgo: 33, outcome: "approved-first",
+  { title: "Independence Day push notification", channel: "Push", audience: "All users", source: "ai", daysAgo: 33, outcome: "approved",
     body: "Freedom to pay your way. Nimbus Pay works in 9 Indian languages. Money, made calm." },
-  { title: "Navratri cashback teaser", channel: "Instagram", source: "agency", daysAgo: 29, outcome: "approved-second",
+  { title: "Navratri cashback teaser", channel: "Instagram", audience: "Young salaried users", source: "agency", daysAgo: 29, outcome: "approved",
     body: "Nine nights, nine reasons to smile. Get 3% cashback on UPI payments. Don't miss out!",
+    revised: "Nine nights, nine reasons to smile. Get 3% cashback on UPI payments. T&C apply. Don't miss out!",
+    reviewNote: "Offer needs the T&C line.",
     disputes: [{ ruleCode: "TON-03", reason: "Festive tone; the offer has a real end date.", upheld: true }] },
-  { title: "Nimbus Card launch tweet", channel: "X / Twitter", source: "ai", daysAgo: 25, outcome: "approved-second",
+  { title: "Nimbus Card launch tweet", channel: "X / Twitter", audience: "Young professionals", source: "ai", daysAgo: 25, outcome: "approved",
     body: "The best credit card for young India is here. Nimbus Card: 1% cashback on all spends. T&C apply.",
+    revised: "Meet Nimbus Card, made for young India: 1% cashback on all spends. T&C apply.",
+    reviewNote: "We have no evidence for 'best'. Please rephrase.",
     disputes: [{ ruleCode: "CLM-04", reason: "It's puffery, everyone says best.", upheld: false }] },
-  { title: "Security FAQ snippet", channel: "Website", source: "human", daysAgo: 22, outcome: "approved-first",
+  { title: "Security FAQ snippet", channel: "Website", audience: "All users", source: "human", daysAgo: 22, outcome: "approved",
     body: "Every payment is protected with bank-grade 256-bit encryption, and Nimbus Pay is PCI DSS v4.0 certified." },
-  { title: "Dussehra offer email", channel: "Email", source: "agency", daysAgo: 18, outcome: "approved-second",
+  { title: "Dussehra offer email", channel: "Email", audience: "Existing users", source: "agency", daysAgo: 18, outcome: "approved",
     body: "Win over bills this Dussehra! Get 3% cashback on UPI payments. Hurry before it's too late!",
+    revised: "Win over bills this Dussehra! Get 3% cashback on UPI payments. T&C apply. Hurry before it's too late.",
+    reviewNote: "Add T&C and drop the second exclamation mark.",
     disputes: [{ ruleCode: "TON-03", reason: "Seasonal campaign language agreed with marketing.", upheld: true }] },
-  { title: "Referral programme post", channel: "Instagram", source: "ai", daysAgo: 14, outcome: "approved-second",
-    body: "Refer a friend and earn free money with NimbusPay. It's the cheap way to save!" },
-  { title: "Diwali countdown story", channel: "Instagram", source: "agency", daysAgo: 9, outcome: "approved-second",
+  { title: "Referral programme post", channel: "Instagram", audience: "Young salaried users", source: "ai", daysAgo: 14, outcome: "approved",
+    body: "Refer a friend and earn free money with NimbusPay. It's the cheap way to save!",
+    revised: "Refer a friend and earn cashback with Nimbus Pay. It's the affordable way to save! T&C apply.",
+    reviewNote: "Banned words and brand name. Accept the suggestions." },
+  { title: "Diwali countdown story", channel: "Instagram", audience: "Young salaried users", source: "agency", daysAgo: 9, outcome: "approved",
     body: "Diwali is almost here! Last chance ever to grab festive cashback on Nimbus Pay. T&C apply.",
     disputes: [{ ruleCode: "TON-03", reason: "Festive countdown, brand team asked for urgency.", upheld: true }] },
-  { title: "App rating ad", channel: "Display ad", source: "human", daysAgo: 6, outcome: "approved-first",
+  { title: "App rating ad", channel: "Display ad", audience: "Prospective users", source: "human", daysAgo: 6, outcome: "approved",
     body: "Rated 4.6 on Google Play by 2.3 lakh users. Money, made calm." },
-  { title: "Bhai Dooj gifting post", channel: "Instagram", source: "agency", daysAgo: 3, outcome: "in_review",
+  { title: "Bhai Dooj gifting post", channel: "Instagram", audience: "Young salaried users", source: "agency", daysAgo: 3, outcome: "in_review",
     body: "Gift your sibling instantly with Nimbus Pay. Don't miss out on 3% cashback! T&C apply.",
     disputes: [{ ruleCode: "TON-03", reason: "Festive gifting post; urgency is celebratory.", upheld: false }] },
-  { title: "Savings rate reminder", channel: "SMS", source: "ai", daysAgo: 2, outcome: "changes_requested",
-    body: "Earn 7.5% p.a. on Nimbus Save. Guaranteed returns, completely safe." },
+  { title: "Savings rate reminder", channel: "SMS", audience: "Nimbus Save customers", source: "ai", daysAgo: 2, outcome: "changes_requested",
+    body: "Earn 7.5% p.a. on Nimbus Save. Guaranteed returns, completely safe.",
+    reviewNote: "Superseded rate, a guarantee and an absolute safety claim. Needs a rewrite." },
 ];
