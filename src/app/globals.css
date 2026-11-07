@@ -46,6 +46,11 @@
     font-family: var(--font-display);
     color: var(--color-ink);
   }
+
+  /* marketing pages: headings take the section's colour, so they follow light and dark mode */
+  [data-site] h1, [data-site] h2, [data-site] h3 {
+    color: inherit;
+  }
 }
 
 /* Highlighted spans in the content viewer */

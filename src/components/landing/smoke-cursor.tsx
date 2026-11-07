@@ -81,11 +81,11 @@ export function SmokeCursor({ activeId, dark = false }: { activeId: string; dark
         p.y += p.vy;
         p.r += 0.55;
         const k = p.life / p.max;
-        const alpha = (dark ? 0.08 : 0.16) * Math.sin(Math.PI * Math.min(1, k * 1.2));
+        const alpha = (dark ? 0.08 : 0.11) * Math.sin(Math.PI * Math.min(1, k * 1.2));
         const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
         const col = dark
           ? (p.hue < 0.5 ? "129,140,248" : "45,212,191")
-          : (p.hue < 0.45 ? "255,255,255" : p.hue < 0.8 ? "199,210,254" : "153,246,228");
+          : (p.hue < 0.45 ? "99,102,241" : p.hue < 0.8 ? "129,140,248" : "45,212,191");
         g.addColorStop(0, `rgba(${col},${alpha})`);
         g.addColorStop(0.55, `rgba(${col},${alpha * 0.55})`);
         g.addColorStop(1, `rgba(${col},0)`);

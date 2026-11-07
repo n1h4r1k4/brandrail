@@ -37,7 +37,7 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
   const vars = (theme === "night" ? NIGHT : DAY) as React.CSSProperties;
 
   return (
-    <main id="top" className="relative min-h-screen bg-[var(--l-bg)] text-white" style={vars}>
+    <main data-site id="top" className="relative min-h-screen bg-[var(--l-bg)] text-white" style={vars}>
       <SmoothScroll />
       {showGate && <IntroGate />}
       <AmbientWhileMounted />
@@ -107,7 +107,7 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
           <section id="what" className="px-5 pb-28 pt-32 sm:px-12">
             <div className="grid gap-14 lg:grid-cols-[1fr_1.15fr]">
               <div className="lg:sticky lg:top-32 lg:self-start">
-                <Label className="text-indigo-700">What it does</Label>
+                <Label className="text-[var(--l-accent)]">What it does</Label>
                 <ScrollFillText
                   className="mt-6 font-serif leading-[1.18]" style={SUB_SIZE}
                   text="Brandrail turns your brand guide into rules software can enforce, then checks every draft against them before it ships. Each flag shows its source and comes with a fix that keeps the creator's meaning, and people make the final call."
@@ -116,13 +116,13 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 {CHECKS.map((c) => (
-                  <div key={c.area} className="rounded-2xl border border-[var(--l-line)] bg-white/70 p-5 shadow-[0_10px_30px_-24px_rgba(18,23,53,0.6)] backdrop-blur transition hover:-translate-y-0.5 hover:border-indigo-300">
+                  <div key={c.area} className="rounded-2xl border border-[var(--l-line)] bg-[var(--l-card)] p-5 shadow-[0_10px_30px_-24px_rgba(18,23,53,0.6)] backdrop-blur transition hover:-translate-y-0.5 hover:border-indigo-300">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-semibold">{c.area}</span>
-                      <span className="rounded-md bg-indigo-50 px-2 py-0.5 font-mono text-[10px] text-indigo-700">{c.rule}</span>
+                      <span className="rounded-md bg-[var(--l-chip)] px-2 py-0.5 font-mono text-[10px] text-[var(--l-chip-ink)]">{c.rule}</span>
                     </div>
-                    <p className="mt-4 text-[15px] text-rose-700 line-through decoration-rose-400/70">{c.bad}</p>
-                    <p className="mt-2 flex gap-2 text-[15px] text-teal-800"><ArrowRight size={16} className="mt-1 shrink-0" />{c.fix}</p>
+                    <p className="mt-4 text-[15px] text-[var(--l-bad)] line-through decoration-rose-400/70">{c.bad}</p>
+                    <p className="mt-2 flex gap-2 text-[15px] text-[var(--l-good)]"><ArrowRight size={16} className="mt-1 shrink-0" />{c.fix}</p>
                   </div>
                 ))}
               </div>
@@ -132,10 +132,10 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
           <section id="screens" className="px-5 pb-28 sm:px-12">
             <div className="flex flex-wrap items-end justify-between gap-6">
               <div>
-                <Label className="text-indigo-700">Inside the product</Label>
+                <Label className="text-[var(--l-accent)]">Inside the product</Label>
                 <h2 className={clsx(HEAD, "mt-5")} style={HEAD_SIZE}>From first draft to <Mark>verified</Mark> record.</h2>
               </div>
-              <Link href="/screens" className="inline-flex items-center gap-2 text-[15px] text-indigo-700 hover:underline">All eight screens <Go /></Link>
+              <Link href="/screens" className="inline-flex items-center gap-2 text-[15px] text-[var(--l-accent)] hover:underline">All eight screens <Go /></Link>
             </div>
             <div className="mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
               {[0, 1, 2, 3, 5, 6].map((i, k) => {
@@ -144,7 +144,7 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
                   <Link key={s.slug} href={`/screens/${s.slug}`} className={clsx("group block", k % 3 === 1 && "lg:mt-16")}>
                     <ProductShot screen={s} />
                     <div className="mt-4 flex items-baseline justify-between gap-3">
-                      <span className="font-serif text-[clamp(22px,1.9vw,30px)] transition group-hover:text-indigo-700">{s.name}</span>
+                      <span className="font-serif text-[clamp(22px,1.9vw,30px)] transition group-hover:text-[var(--l-accent)]">{s.name}</span>
                       <span className="text-xs text-[var(--l-muted)]">{s.tags}</span>
                     </div>
                   </Link>
@@ -156,14 +156,14 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
           <section id="proof" className="px-5 pb-12 sm:px-12">
             <div className="flex flex-wrap items-end justify-between gap-6">
               <div>
-                <Label className="text-indigo-700">Proof</Label>
+                <Label className="text-[var(--l-accent)]">Proof</Label>
                 <h2 className={clsx(HEAD, "mt-5")} style={HEAD_SIZE}>Proof, not <Mark>promises.</Mark></h2>
               </div>
               <Lede className="text-[var(--l-muted)]">Measured on a 44-sample labelled test set, then tested end to end on the live site. 58 of 58 blockers caught.</Lede>
             </div>
             <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {STATS.map(([v, k]) => (
-                <div key={k} className="rounded-3xl bg-[#121735] p-6 text-white">
+                <div key={k} className="rounded-3xl bg-[var(--l-tile)] p-6 text-white">
                   <CountUp value={v} className="block font-serif text-[clamp(44px,4.6vw,72px)] leading-none" />
                   <span className="mt-4 block text-sm text-indigo-200">{k}</span>
                 </div>
@@ -171,8 +171,8 @@ function Inner({ hasSession, showGate, aiNote, expired }: Props) {
             </div>
             <div className="mt-4 grid gap-4 lg:grid-cols-3">
               {PROOF.map((g) => (
-                <div key={g.group} className="rounded-3xl border border-[var(--l-line)] bg-white/70 p-6">
-                  <div className="flex items-center justify-between text-sm font-semibold">{g.group}<span className="rounded-full bg-teal-50 px-2 py-0.5 font-mono text-[11px] text-teal-800">{g.count}</span></div>
+                <div key={g.group} className="rounded-3xl border border-[var(--l-line)] bg-[var(--l-card)] p-6">
+                  <div className="flex items-center justify-between text-sm font-semibold">{g.group}<span className="rounded-full bg-[var(--l-teal-chip)] px-2 py-0.5 font-mono text-[11px] text-[var(--l-good)]">{g.count}</span></div>
                   <ul className="mt-3 divide-y divide-[var(--l-line)]">
                     {g.rows.map(([k, v]) => (
                       <li key={k} className="flex items-baseline justify-between gap-4 py-2.5 text-sm">

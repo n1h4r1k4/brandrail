@@ -24,7 +24,7 @@ function Inner({ hasSession, showGate }: Props) {
   const cur = SCREENS[active];
   return (
     <DemoTargetProvider value={cur.slug}>
-    <main className="relative h-screen overflow-hidden bg-[#070b22] text-white">
+    <main data-site className="relative h-screen overflow-hidden bg-[#070b22] text-white">
       {showGate && <IntroGate />}
       <Conveyor images={images} quality={quality} apiRef={api} onActive={setActive} onOpen={(i) => router.push(`/screens/${SCREENS[i].slug}`)} />
       <Header hasSession={hasSession} active="screens" />

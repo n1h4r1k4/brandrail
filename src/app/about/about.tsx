@@ -6,7 +6,7 @@ import { AmbientWhileMounted } from "@/components/sound";
 import { EvidenceScene } from "@/components/landing/evidence";
 import { SmokeCursor } from "@/components/landing/smoke-cursor";
 import { GuideOrb, LandingSettingsProvider, Reveal, SmoothScroll, useLanding } from "@/components/landing/bits";
-import { CountUp, DAY, DemoForm, Go, HEAD, KeepScrolling, HEAD_SIZE, Header, Label, Lede, Mark, SiteFooter } from "@/components/landing/site";
+import { CountUp, DAY, NIGHT, DemoForm, Go, HEAD, KeepScrolling, HEAD_SIZE, Header, Label, Lede, Mark, SiteFooter } from "@/components/landing/site";
 
 interface Props { hasSession: boolean; showGate: boolean; aiNote: string }
 
@@ -28,9 +28,9 @@ const STEPS = [
 const STATS: [string, string][] = [["29", "Rules with page citations"], ["24", "Rule-based detectors"], ["13", "Facts with expiry dates"], ["4", "Roles in the approval flow"]];
 
 function Inner({ hasSession, showGate, aiNote }: Props) {
-  const { quality } = useLanding();
+  const { quality, theme } = useLanding();
   return (
-    <main className="relative min-h-screen bg-[#070b22] text-white" style={DAY as React.CSSProperties}>
+    <main data-site className="relative min-h-screen bg-[#070b22] text-white" style={(theme === "night" ? NIGHT : DAY) as React.CSSProperties}>
       <SmoothScroll />
       {showGate && <IntroGate />}
       <AmbientWhileMounted />
@@ -87,11 +87,11 @@ function Inner({ hasSession, showGate, aiNote }: Props) {
       </div>
 
       <div id="steps" data-tone="light" className="relative bg-[var(--l-bg)] text-[var(--l-ink)]">
-        <SmokeCursor activeId="steps" />
+        <SmokeCursor activeId="steps" dark={theme === "night"} />
         <section className="relative z-20 px-5 pb-10 pt-28 sm:px-12">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {STATS.map(([v, k]) => (
-              <div key={k} className="rounded-3xl bg-[#121735] p-6 text-white">
+              <div key={k} className="rounded-3xl bg-[var(--l-tile)] p-6 text-white">
                 <CountUp value={v} className="block font-serif text-[clamp(44px,4.6vw,72px)] leading-none" />
                 <span className="mt-4 block text-sm text-indigo-200">{k}</span>
               </div>
@@ -99,7 +99,7 @@ function Inner({ hasSession, showGate, aiNote }: Props) {
           </div>
         </section>
         <section className="relative z-20 px-5 pb-16 pt-16 sm:px-12">
-          <Label className="text-indigo-700">Four steps</Label>
+          <Label className="text-[var(--l-accent)]">Four steps</Label>
           <h2 className={clsx(HEAD, "mt-5 max-w-3xl")} style={HEAD_SIZE}>From the brand guide to a <Mark>verified</Mark> post.</h2>
           <ol className="relative mt-14 grid gap-6 lg:grid-cols-4">
             <span className="absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-indigo-400 to-teal-300 lg:block" />

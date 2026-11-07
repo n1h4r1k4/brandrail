@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { ArrowRight, ArrowUpRight, Check, ChevronDown, VolumeX } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, ChevronDown, Moon, Sun, VolumeX } from "lucide-react";
 import { useSound } from "@/components/sound";
 import { LogoMark } from "@/components/ui";
-import { SettingsMenu } from "./bits";
+import { SettingsMenu, useLanding } from "./bits";
 import type { Screen } from "./content";
 
 // ------------------------------------------------------------- type and colour
@@ -16,8 +16,16 @@ export const HEAD = "font-serif leading-[1.04] tracking-[-0.012em]";
 export const HEAD_SIZE = { fontSize: "clamp(32px, 4vw, 62px)" };
 export const SUB_SIZE = { fontSize: "clamp(24px, 2.6vw, 40px)" };
 
-export const DAY = { "--l-bg": "#f5f6fb", "--l-ink": "#121735", "--l-faint": "#c9cde3", "--l-muted": "#5b6386", "--l-line": "rgba(18,23,53,0.13)" };
-export const NIGHT = { "--l-bg": "#0b0f2a", "--l-ink": "#eef0ff", "--l-faint": "#343a66", "--l-muted": "#a3a9d6", "--l-line": "rgba(255,255,255,0.12)" };
+export const DAY = {
+  "--l-bg": "#f5f6fb", "--l-ink": "#121735", "--l-faint": "#c9cde3", "--l-muted": "#5b6386", "--l-line": "rgba(18,23,53,0.13)",
+  "--l-card": "rgba(255,255,255,0.78)", "--l-accent": "#4338ca", "--l-chip": "#eef0ff", "--l-chip-ink": "#4338ca",
+  "--l-tile": "#121735", "--l-bad": "#be123c", "--l-good": "#115e59", "--l-teal-chip": "#f0fdfa",
+};
+export const NIGHT = {
+  "--l-bg": "#0b0f2a", "--l-ink": "#eef0ff", "--l-faint": "#343a66", "--l-muted": "#a3a9d6", "--l-line": "rgba(255,255,255,0.12)",
+  "--l-card": "rgba(255,255,255,0.05)", "--l-accent": "#a5b4fc", "--l-chip": "rgba(129,140,248,0.16)", "--l-chip-ink": "#c7d2fe",
+  "--l-tile": "#18205a", "--l-bad": "#fda4af", "--l-good": "#5eead4", "--l-teal-chip": "rgba(45,212,191,0.14)",
+};
 
 /** A highlighted word: brand gradient underline. */
 export function Mark({ children }: { children: React.ReactNode }) {
@@ -79,9 +87,23 @@ function MuteButton() {
   );
 }
 
+/** Sun / moon button that switches the site between light and dark. */
+function ThemeToggle() {
+  const { theme, setTheme } = useLanding();
+  const { play } = useSound();
+  const night = theme === "night";
+  return (
+    <button type="button" onClick={() => { setTheme(night ? "day" : "night"); play("tick"); }} aria-label={night ? "Switch to light mode" : "Switch to dark mode"} title={night ? "Light mode" : "Dark mode"} className="grid h-9 w-9 place-items-center rounded-full transition hover:bg-current/10">
+      {night ? <Sun size={17} strokeWidth={1.6} /> : <Moon size={17} strokeWidth={1.6} />}
+    </button>
+  );
+}
+
 export function Header({ hasSession, active }: { hasSession: boolean; active?: "about" | "screens" }) {
   const target = useContext(DemoTarget);
-  const [light, setLight] = useState(false);
+  const { theme } = useLanding();
+  const [overLight, setLight] = useState(false);
+  const light = overLight && theme !== "night";
   useEffect(() => {
     const check = () => {
       const y = 40;
@@ -116,6 +138,7 @@ export function Header({ hasSession, active }: { hasSession: boolean; active?: "
           ))}
         </nav>
         <div className="flex items-center gap-1">
+          <ThemeToggle />
           <span className="hidden md:block"><SettingsMenu /></span>
           <MuteButton />
           {hasSession && !target ? (
@@ -218,7 +241,7 @@ export function SiteFooter({ aiNote, next, auto = false }: { aiNote: string; nex
   ];
   return (
     <footer id="contact" data-tone="light" className="relative bg-[var(--l-bg)] px-5 pb-10 pt-24 text-[var(--l-ink)] sm:px-12">
-      <div className="relative overflow-hidden rounded-[32px] bg-[#121735] px-6 py-16 text-white sm:px-14">
+      <div className="relative overflow-hidden rounded-[32px] bg-[var(--l-tile)] px-6 py-16 text-white sm:px-14">
         <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-indigo-500/40 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-teal-400/30 blur-3xl" />
         <div className="relative grid items-end gap-10 lg:grid-cols-[1.4fr_1fr]">
@@ -244,7 +267,7 @@ export function SiteFooter({ aiNote, next, auto = false }: { aiNote: string; nex
             <ul className="mt-3 space-y-2 text-sm text-[var(--l-muted)]">
               {c.items.map(([label, href, ext]) => (
                 <li key={label}>
-                  <a href={href} target={ext ? "_blank" : undefined} rel={ext ? "noreferrer" : undefined} className="inline-flex items-center gap-1 hover:text-indigo-600">
+                  <a href={href} target={ext ? "_blank" : undefined} rel={ext ? "noreferrer" : undefined} className="inline-flex items-center gap-1 hover:text-[var(--l-accent)]">
                     {label} {ext && <ArrowUpRight size={13} />}
                   </a>
                 </li>
@@ -260,7 +283,7 @@ export function SiteFooter({ aiNote, next, auto = false }: { aiNote: string; nex
 
       <Link href={next.href} className="group mt-16 flex items-center justify-between gap-6 border-y border-[var(--l-line)] py-8">
         <span className="text-sm text-[var(--l-muted)]">Next</span>
-        <span className={clsx(HEAD, "flex items-center gap-4 transition group-hover:text-indigo-600")} style={SUB_SIZE}>
+        <span className={clsx(HEAD, "flex items-center gap-4 transition group-hover:text-[var(--l-accent)]")} style={SUB_SIZE}>
           {next.label}
           <span className="grid h-12 w-12 place-items-center rounded-full bg-indigo-600 text-white transition group-hover:translate-x-1"><ArrowRight size={20} /></span>
         </span>
