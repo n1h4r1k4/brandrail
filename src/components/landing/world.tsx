@@ -536,5 +536,10 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     };
   }, [theme, quality, sections, containerId]);
 
-  return <div ref={host} className="fixed inset-0 z-0" aria-hidden="true" />;
+  // painted backdrop: shows while the scene loads, and stays if the device has no WebGL,
+  // so the white headlines are always readable
+  const fallback = theme === "night"
+    ? "linear-gradient(180deg, #0c0920 0%, #1e1446 45%, #2e1065 70%, #120726 100%)"
+    : "linear-gradient(180deg, #7c6bd6 0%, #9a86ea 35%, #6d28d9 58%, #3b0f7a 80%, #24104f 100%)";
+  return <div ref={host} className="fixed inset-0 z-0" style={{ background: fallback }} aria-hidden="true" />;
 }
