@@ -5,13 +5,17 @@ import { ArrowLeft, Check } from "lucide-react";
 import { IntroGate } from "@/components/intro-gate";
 import { GuideOrb, LandingSettingsProvider, SmoothScroll } from "@/components/landing/bits";
 import { SmokeCursor } from "@/components/landing/smoke-cursor";
-import { ButtonLink, DAY, DemoForm, Go, HEAD, HEAD_SIZE, Header, Label, Lede, ProductShot, SiteFooter } from "@/components/landing/site";
+import { ButtonLink, DAY, DemoForm, DemoTargetProvider, Go, HEAD, HEAD_SIZE, Header, Label, Lede, ProductShot, SiteFooter } from "@/components/landing/site";
 import { SCREENS } from "@/components/landing/content";
 
 interface Props { index: number; hasSession: boolean; showGate: boolean; aiNote: string }
 
 export function ScreenDetail(props: Props) {
-  return <LandingSettingsProvider><Inner {...props} /></LandingSettingsProvider>;
+  return (
+    <LandingSettingsProvider>
+      <DemoTargetProvider value={SCREENS[props.index].slug}><Inner {...props} /></DemoTargetProvider>
+    </LandingSettingsProvider>
+  );
 }
 
 const Chip = ({ children }: { children: React.ReactNode }) => (

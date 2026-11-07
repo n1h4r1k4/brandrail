@@ -6,7 +6,7 @@ import { Check, Circle, ScanLine } from "lucide-react";
 import { IntroGate } from "@/components/intro-gate";
 import { GuideOrb, LandingSettingsProvider, useLanding } from "@/components/landing/bits";
 import { Conveyor, type ConveyorApi } from "@/components/landing/conveyor";
-import { ButtonLink, DemoForm, Go, HEAD, Header, Label } from "@/components/landing/site";
+import { ButtonLink, DemoForm, DemoTargetProvider, Go, HEAD, Header, Label } from "@/components/landing/site";
 import { SCREENS } from "@/components/landing/content";
 
 interface Props { hasSession: boolean; showGate: boolean; aiNote: string }
@@ -23,6 +23,7 @@ function Inner({ hasSession, showGate }: Props) {
   const images = useMemo(() => SCREENS.map((s) => s.img), []);
   const cur = SCREENS[active];
   return (
+    <DemoTargetProvider value={cur.slug}>
     <main className="relative h-screen overflow-hidden bg-[#070b22] text-white">
       {showGate && <IntroGate />}
       <Conveyor images={images} quality={quality} apiRef={api} onActive={setActive} onOpen={(i) => router.push(`/screens/${SCREENS[i].slug}`)} />
@@ -55,5 +56,6 @@ function Inner({ hasSession, showGate }: Props) {
       </div>
       <GuideOrb />
     </main>
+    </DemoTargetProvider>
   );
 }

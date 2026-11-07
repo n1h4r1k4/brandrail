@@ -2,7 +2,7 @@
 // Shared pieces of Brandrail's marketing pages, in Brandrail's own look: indigo and teal from
 // the logo, sentence-case serif headlines, a floating capsule header, product cards and footer.
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { ArrowRight, ArrowUpRight, Check, VolumeX } from "lucide-react";
 import { useSound } from "@/components/sound";
@@ -44,11 +44,17 @@ export function Lede({ children, className }: { children: React.ReactNode; class
 const BTN = "inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-[15px] font-medium text-white shadow-[0_12px_30px_-12px_rgba(79,70,229,0.8)] transition hover:bg-indigo-500";
 const BTN_GHOST = "inline-flex items-center gap-2 rounded-full border border-current/30 px-5 py-2.5 text-[15px] transition hover:bg-current/10";
 
+// On a screen's page every demo button opens that screen, not the dashboard.
+const DemoTarget = createContext<string | undefined>(undefined);
+export const DemoTargetProvider = DemoTarget.Provider;
+
 export function DemoForm({ children, className, ghost, next }: { children: React.ReactNode; className?: string; ghost?: boolean; next?: string }) {
   const { play } = useSound();
+  const pageTarget = useContext(DemoTarget);
+  const target = next ?? pageTarget;
   return (
     <form action="/api/demo" method="post" onSubmit={() => play("success")}>
-      {next && <input type="hidden" name="next" value={next} />}
+      {target && <input type="hidden" name="next" value={target} />}
       <button className={className ?? (ghost ? BTN_GHOST : BTN)}>{children}</button>
     </form>
   );
@@ -73,6 +79,7 @@ function MuteButton() {
 }
 
 export function Header({ hasSession, active }: { hasSession: boolean; active?: "about" | "screens" }) {
+  const target = useContext(DemoTarget);
   const [light, setLight] = useState(false);
   useEffect(() => {
     const check = () => {
@@ -110,10 +117,10 @@ export function Header({ hasSession, active }: { hasSession: boolean; active?: "
         <div className="flex items-center gap-1">
           <span className="hidden md:block"><SettingsMenu /></span>
           <MuteButton />
-          {hasSession ? (
+          {hasSession && !target ? (
             <Link href="/app" className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Open workspace <Go /></Link>
           ) : (
-            <DemoForm className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Try the demo <Go /></DemoForm>
+            <DemoForm className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">{hasSession ? "Open workspace" : "Try the demo"} <Go /></DemoForm>
           )}
         </div>
       </div>
