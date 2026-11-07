@@ -1,21 +1,52 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 
-export const REVIEW_MODEL = process.env.BRANDRAIL_REVIEW_MODEL || "claude-sonnet-5-5";
-export const FAST_MODEL = process.env.BRANDRAIL_FAST_MODEL || "claude-haiku-5-5";
+// Provider selection: Claude if an Anthropic key is configured, otherwise Google Gemini
+// (free tier) if a Gemini key is configured, otherwise AI checks are off and only the
+// rule-based engine runs.
+export type Provider = "claude" | "gemini" | "none";
 
-export function aiEnabled() {
-  return Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
+export const CLAUDE_REVIEW_MODEL = process.env.BRANDRAIL_REVIEW_MODEL || "claude-sonnet-5-5";
+export const CLAUDE_FAST_MODEL = process.env.BRANDRAIL_FAST_MODEL || "claude-haiku-5-5";
+export const GEMINI_REVIEW_MODEL = process.env.BRANDRAIL_GEMINI_MODEL || "gemini-flash-latest";
+export const GEMINI_FAST_MODEL = process.env.BRANDRAIL_GEMINI_FAST_MODEL || "gemini-flash-lite-latest";
+
+export function activeProvider(): Provider {
+  if (process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN) return "claude";
+  if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) return "gemini";
+  return "none";
 }
 
-let client: Anthropic | null = null;
+export const aiEnabled = () => activeProvider() !== "none";
+
+export function modelFor(tier: "review" | "fast") {
+  const p = activeProvider();
+  if (p === "claude") return tier === "review" ? CLAUDE_REVIEW_MODEL : CLAUDE_FAST_MODEL;
+  if (p === "gemini") return tier === "review" ? GEMINI_REVIEW_MODEL : GEMINI_FAST_MODEL;
+  return "none";
+}
+
+/** Short label for the UI, e.g. "Claude · claude-sonnet-5-5" or "Gemini (free tier) · gemini-flash-latest". */
+export function providerLabel() {
+  const p = activeProvider();
+  if (p === "claude") return `Claude · ${CLAUDE_REVIEW_MODEL}`;
+  if (p === "gemini") return `Gemini (free tier) · ${GEMINI_REVIEW_MODEL}`;
+  return "off";
+}
+
+export function providerName() {
+  const p = activeProvider();
+  return p === "claude" ? "Anthropic Claude API" : p === "gemini" ? "Google Gemini API" : "none";
+}
+
+let anthropic: Anthropic | null = null;
 export function claude() {
-  client ??= new Anthropic({ timeout: 110_000, maxRetries: 2 });
-  return client;
+  anthropic ??= new Anthropic({ timeout: 110_000, maxRetries: 2 });
+  return anthropic;
 }
 
-/** Human-readable reason for an API failure, without leaking secrets. */
-export function describeAiError(err: unknown): string {
+/** Human-readable reason for a Claude API failure, without leaking secrets. */
+export function describeClaudeError(err: unknown): string {
   if (err instanceof Anthropic.AuthenticationError) return "The Claude API key was rejected.";
   if (err instanceof Anthropic.PermissionDeniedError) return "The Claude API key lacks permission for this model.";
   if (err instanceof Anthropic.RateLimitError) return "Claude API rate limit reached. Try again in a minute.";

@@ -7,7 +7,7 @@ import { diffWords } from "diff";
 import {
   ArrowLeft, Check, CheckCircle2, ChevronDown, Download, FileText, Loader2, Lock, MessageSquare, Pencil, RefreshCw, Send, ShieldAlert, ShieldCheck, Sparkles, Undo2, X,
 } from "lucide-react";
-import { Button, Card, FindingStatusTag, Mono, SeverityTag, StatusTag, Tag, timeAgo } from "@/components/ui";
+import { Button, Card, FindingStatusTag, Mono, ScoreRing, SeverityTag, StatusTag, Tag, timeAgo } from "@/components/ui";
 import { ROLE_LABEL, SOURCE_LABEL, canOverride, canReview } from "@/lib/workflow";
 import type {
   Category, CheckStats, ContentSource, ContentStatus, Field, FindingStatus, ImageAnalysis, Intent, Role, Severity,
@@ -83,13 +83,17 @@ export function ContentWorkspace(p: DetailProps) {
     };
   }, [p.findings]);
 
+  const score = Math.max(0, 100 - counts.blocker * 15 - counts.disputedBlockers * 8 - counts.major * 6 - counts.minor * 2);
   const lastDecision = [...p.approvals].reverse().find((a) => a.decision === "changes_requested" && a.round === c.reviewRound);
 
   return (
     <div>
       <Link href="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-muted hover:text-ink"><ArrowLeft size={14} /> All content</Link>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+      <div className="fade-up flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line/80 bg-white p-5 shadow-soft">
+        <div className="flex items-center gap-4">
+          <ScoreRing value={score} size={68} label="Brand safety score" />
+          <div>
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-muted">Brand safety score</div>
           <h1 className="text-2xl font-bold tracking-tight">{c.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
             <StatusTag status={c.status} />
@@ -98,6 +102,7 @@ export function ContentWorkspace(p: DetailProps) {
             <span>{c.channel} · {c.audience}</span>
             <span>· by {c.createdBy}</span>
             {c.seeded && <Tag>seeded demo history</Tag>}
+          </div>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -158,7 +163,7 @@ export function ContentWorkspace(p: DetailProps) {
             <CheckSummary p={p} />
           </div>
 
-          <div className="space-y-4">
+          <div className="scroll-thin space-y-4 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1">
             {myTurn && <ReviewPanel p={p} run={run} pending={pending} />}
             <FindingsList p={p} selected={selected} onSelect={setSelected} run={run} pending={pending} isCreator={isCreator} editable={editable} reviewing={reviewing} />
           </div>
@@ -291,7 +296,7 @@ function IntentCard({ p, canEdit, run, pending }: { p: DetailProps; canEdit: boo
         <div><dt className="inline text-muted">Key message: </dt><dd className="inline text-ink">{i!.keyMessage}</dd></div>
         <div><dt className="inline text-muted">Call to action: </dt><dd className="inline text-ink">{i!.cta || "none"}</dd></div>
       </dl>
-      {!p.content.intentConfirmed && <p className="mt-2 text-xs text-muted">Extracted by Claude Haiku. Once you confirm it, the AI review keeps it and rejects fixes that would drop the call to action.</p>}
+      {!p.content.intentConfirmed && <p className="mt-2 text-xs text-muted">Extracted by the AI model. Once you confirm it, the AI review keeps it and rejects fixes that would drop the call to action.</p>}
     </Card>
   );
 }
@@ -409,7 +414,7 @@ function CheckSummary({ p }: { p: DetailProps }) {
         <li><Tag tone="teal">Rule-based</Tag> {s.rulesEvaluated} rules evaluated → {s.ruleFindings} finding(s). Reproducible: same text + same rulebook = same result.</li>
         <li>
           <Tag tone="accent">AI-assisted</Tag>{" "}
-          {s.ai.status === "ok" && <>Claude ({s.ai.model}) proposed {s.ai.proposed}, the verifier kept {s.ai.kept} · {((s.ai.latencyMs ?? 0) / 1000).toFixed(1)} s{s.ai.cacheReadTokens ? ` · ${s.ai.cacheReadTokens.toLocaleString()} rulebook tokens from cache` : ""}</>}
+          {s.ai.status === "ok" && <>AI review ({s.ai.model}) proposed {s.ai.proposed}, the verifier kept {s.ai.kept} · {((s.ai.latencyMs ?? 0) / 1000).toFixed(1)} s{s.ai.cacheReadTokens ? ` · ${s.ai.cacheReadTokens.toLocaleString()} tokens served from cache` : ""}</>}
           {s.ai.status === "skipped" && <>{s.ai.message}{full?.ai.status === "ok" && ` (last full check: ${full.ai.kept} kept of ${full.ai.proposed})`}</>}
           {(s.ai.status === "off" || s.ai.status === "error" || s.ai.status === "refused") && <span className="text-major">{s.ai.message ?? "AI review unavailable."} Rule-based checks still ran.</span>}
         </li>
@@ -489,7 +494,7 @@ function FindingCard({ f, p, selected, onSelect, run, pending, isCreator, editab
     <div
       id={`f-${f.id}`}
       onClick={() => onSelect(f.id)}
-      className={clsx("rounded-xl border border-l-4 bg-white p-3.5 text-sm transition", border, selected === f.id ? "border-accent shadow-md ring-1 ring-accent/30" : "border-line", f.status !== "open" && f.status !== "disputed" && "opacity-75")}
+      className={clsx("fade-up rounded-2xl border border-l-4 bg-white p-4 text-sm shadow-soft transition hover:shadow-lift", border, selected === f.id ? "border-accent ring-2 ring-accent/25" : "border-line/80", f.status !== "open" && f.status !== "disputed" && "opacity-75")}
     >
       <div className="flex flex-wrap items-center gap-1.5">
         <SeverityTag severity={f.severity} />

@@ -99,7 +99,7 @@ export async function runCheck(db: DB, contentId: string, kind: "full" | "quick"
 
   if (kind === "full") {
     if (!aiEnabled()) {
-      stats.ai = { status: "off", message: "No Claude API key is configured, so only rule-based checks ran." };
+      stats.ai = { status: "off", message: "No AI key is configured, so only rule-based checks ran." };
     } else {
       const res = await aiReview(kit, ws.brandName, kit.version, ec, det.findings);
       stats.maskedTerms = res.masked;

@@ -1,7 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { claude, describeAiError, REVIEW_MODEL } from "./client";
+import { generateStructured } from "./structured";
 import { locateQuote } from "../engine/text";
 import type { Category, Severity } from "../db/schema";
 
@@ -37,38 +36,27 @@ export interface RuleDraft {
  */
 export async function compileRules(pages: string[], existingTitles: string[]) {
   const doc = pages.map((p, i) => `<page number="${i + 1}">\n${p}\n</page>`).join("\n");
-  try {
-    const res = await claude().beta.messages.parse({
-      model: REVIEW_MODEL,
-      max_tokens: 16000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "medium", format: betaZodOutputFormat(z.object({ rules: z.array(Draft) })) },
-      messages: [
-        {
-          role: "user",
-          content: `Extract the brand rules from these brand-guideline pages. One draft per atomic, checkable rule. Ignore background, history and decoration. Do not duplicate rules the brand already has: ${existingTitles.join("; ")}.\n\n${doc}`,
-        },
-      ],
-    });
-    if (res.stop_reason === "refusal" || !res.parsed_output) return { ok: false as const, error: "The model could not read this document." };
-    const drafts: RuleDraft[] = res.parsed_output.rules.map((r) => {
-      const page = pages[r.source_page - 1] ?? "";
-      return {
-        category: r.category,
-        title: r.title,
-        statement: r.statement,
-        severity: r.severity,
-        bannedTerms: r.banned_terms.filter((t) => t.term.trim()),
-        examplesDo: r.do_examples,
-        examplesDont: r.dont_examples,
-        sourcePage: r.source_page,
-        sourceQuote: r.source_quote,
-        verified: Boolean(page && locateQuote(page, r.source_quote)),
-      };
-    });
-    return { ok: true as const, drafts };
-  } catch (err) {
-    return { ok: false as const, error: describeAiError(err) };
-  }
+  const res = await generateStructured({
+    tier: "review",
+    user: `Extract the brand rules from these brand-guideline pages. One draft per atomic, checkable rule. Ignore background, history and decoration. Do not duplicate rules the brand already has: ${existingTitles.join("; ")}.\n\n${doc}`,
+    schema: z.object({ rules: z.array(Draft) }),
+    effort: "medium",
+  });
+  if (res.status !== "ok" || !res.data) return { ok: false as const, error: res.message ?? "The model could not read this document." };
+  const drafts: RuleDraft[] = res.data.rules.map((r) => {
+    const page = pages[r.source_page - 1] ?? "";
+    return {
+      category: r.category,
+      title: r.title,
+      statement: r.statement,
+      severity: r.severity,
+      bannedTerms: r.banned_terms.filter((t) => t.term.trim()),
+      examplesDo: r.do_examples,
+      examplesDont: r.dont_examples,
+      sourcePage: r.source_page,
+      sourceQuote: r.source_quote,
+      verified: Boolean(page && locateQuote(page, r.source_quote)),
+    };
+  });
+  return { ok: true as const, drafts };
 }

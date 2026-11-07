@@ -448,7 +448,7 @@ export async function addRule(input: NewRuleInput): Promise<Result<{ version: nu
 export async function compileBrandBook(pages: string[], sourceName: string): Promise<Result<{ drafts: RuleDraft[] }>> {
   const s = await requireSession();
   if (s.user.role !== "admin") return fail("Only the brand admin can import guidelines.");
-  if (!aiEnabled()) return fail("The Rule Compiler needs a Claude API key. You can still add rules by hand.");
+  if (!aiEnabled()) return fail("The Rule Compiler needs an AI key (Gemini or Claude). You can still add rules by hand.");
   const text = pages.join("\n").trim();
   if (text.length < 40) return fail("That document has too little text to compile.");
   if (text.length > 120_000) return fail("Documents up to ~120k characters are supported.");

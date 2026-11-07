@@ -203,7 +203,7 @@ function ImportGuidelines({ ai, onDone }: { ai: boolean; onDone: (msg: string) =
   async function compile() {
     if (!pages) return;
     setError(null);
-    setBusy("Claude is compiling rules and quoting their source pages… (about 20–40 s)");
+    setBusy("Compiling rules and quoting their source pages… (about 20–40 s)");
     const res = await compileBrandBook(pages, name);
     setBusy(null);
     if (!res.ok) return setError(res.error);
@@ -222,10 +222,10 @@ function ImportGuidelines({ ai, onDone }: { ai: boolean; onDone: (msg: string) =
     <Card className="mb-6 border-accent/30 p-4">
       <b className="text-sm">Rule Compiler</b>
       <p className="mt-1 text-xs leading-relaxed text-muted">
-        Upload brand guidelines (PDF, DOCX or TXT). Claude drafts atomic rules and must quote the page each rule comes from. Brandrail checks every quote
+        Upload brand guidelines (PDF, DOCX or TXT). The AI model drafts atomic rules and must quote the page each rule comes from. Brandrail checks every quote
         against the document, so drafts it can&apos;t verify can&apos;t be published. You approve each rule before it goes live.
       </p>
-      {!ai && <p className="mt-2 text-xs text-major">Needs a Claude API key on this deployment. You can still add rules by hand.</p>}
+      {!ai && <p className="mt-2 text-xs text-major">Needs an AI key on this deployment. You can still add rules by hand.</p>}
       <div className="mt-3 flex flex-wrap gap-2">
         <input ref={ref} type="file" accept=".pdf,.docx,.txt,.md" className="hidden" onChange={(e) => e.target.files?.[0] && load(e.target.files[0])} />
         <Button size="sm" variant="secondary" onClick={() => ref.current?.click()} disabled={!!busy}><FileUp size={14} /> Upload guidelines</Button>

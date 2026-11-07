@@ -88,6 +88,19 @@ const iou = (a: Bbox, b: Bbox) => {
   return inter / Math.max(1, area(a) + area(b) - inter);
 };
 
+function borderPixels(data: ImageData, x0: number, y0: number, x1: number, y1: number, pad: number): RGB[] {
+  const out: RGB[] = [];
+  const X0 = Math.max(0, x0 - pad), Y0 = Math.max(0, y0 - pad);
+  const X1 = Math.min(data.width - 1, x1 + pad), Y1 = Math.min(data.height - 1, y1 + pad);
+  const push = (x: number, y: number) => {
+    const i = (y * data.width + x) * 4;
+    out.push([data.data[i], data.data[i + 1], data.data[i + 2]]);
+  };
+  for (let x = X0; x <= X1; x += 2) { push(x, Y0); push(x, Y1); }
+  for (let y = Y0; y <= Y1; y += 2) { push(X0, y); push(X1, y); }
+  return out;
+}
+
 export async function analyseImage(src: string, onProgress?: (msg: string) => void): Promise<AnalysedImage> {
   onProgress?.("Preparing image…");
   const img = await loadImage(src);
@@ -128,9 +141,18 @@ export async function analyseImage(src: string, onProgress?: (msg: string) => vo
   for (const f of found) {
     confSum += f.confidence;
     const { x0, y0, x1, y1 } = f.bbox;
-    const clusters = kmeans(pixelsIn(data, x0, y0, x1, y1, 3000), 2, 8).sort((a, b) => a.count - b.count);
+    const clusters = kmeans(pixelsIn(data, x0, y0, x1, y1, 3000), 2, 8);
     if (clusters.length < 2) continue;
-    const [fg, bg] = clusters; // text strokes cover less area than their background
+    // The background is whichever colour dominates a thin ring just outside the text box.
+    const ring = borderPixels(data, x0, y0, x1, y1, 4);
+    const near = (p: RGB) => {
+      const d = clusters.map((c) => (p[0] - c.color[0]) ** 2 + (p[1] - c.color[1]) ** 2 + (p[2] - c.color[2]) ** 2);
+      return d[0] <= d[1] ? 0 : 1;
+    };
+    const votes = [0, 0];
+    for (const p of ring) votes[near(p)]++;
+    const bgIdx = ring.length ? (votes[0] >= votes[1] ? 0 : 1) : (clusters[0].count >= clusters[1].count ? 0 : 1);
+    const bg = clusters[bgIdx], fg = clusters[1 - bgIdx];
     lines.push({
       text: f.text,
       contrast: Math.round(contrastRatio(fg.color, bg.color) * 100) / 100,

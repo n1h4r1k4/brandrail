@@ -1,7 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { claude, describeAiError, REVIEW_MODEL } from "./client";
+import { generateStructured } from "./structured";
 import { createMask } from "./privacy";
 import { factStatus, type DraftFinding, type EngineContent, type Kit } from "../engine/types";
 
@@ -13,13 +12,12 @@ const AiFinding = z.object({
   fact_codes: z.array(z.string()).describe("Facts Ledger codes relevant to this finding (may be empty)."),
   suggestion: z
     .string()
-    .nullable()
-    .describe("Replacement text for exactly the quoted span that fixes the issue and keeps the creator's intent. Empty string to delete the span. null if no safe rewrite exists."),
+    .describe('Replacement text for exactly the quoted span that fixes the issue and keeps the creator\'s intent. Use "" to delete the span. Use "NO_FIX" if no safe rewrite exists.'),
   confidence: z.number().describe("0 to 1. How sure you are that this is a real violation a brand reviewer would agree with."),
 });
 
 const AiReview = z.object({ findings: z.array(AiFinding) });
-export type AiFindingT = z.infer<typeof AiFinding>;
+export type AiFindingT = Omit<z.infer<typeof AiFinding>, "suggestion"> & { suggestion: string | null };
 
 function renderKit(kit: Kit, brand: string, rulebookVersion: number) {
   const rules = kit.rules
@@ -102,32 +100,18 @@ export async function aiReview(
     "Review the content and return your findings.",
   ].join("\n");
 
-  const started = Date.now();
-  try {
-    const response = await claude().beta.messages.parse({
-      model: REVIEW_MODEL,
-      max_tokens: 16000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "medium", format: betaZodOutputFormat(AiReview) },
-      system: [{ type: "text", text: renderKit(kit, brand, rulebookVersion), cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: user }],
-    });
-    const latencyMs = Date.now() - started;
-    const usage = {
-      input: response.usage.input_tokens,
-      cacheRead: response.usage.cache_read_input_tokens ?? 0,
-      output: response.usage.output_tokens,
-    };
-    if (response.stop_reason === "refusal") {
-      return { status: "refused", message: "The model declined to review this content.", findings: [], latencyMs, usage, masked: mask.map.size, unmask: mask.unmask, model: response.model };
-    }
-    const parsed = response.parsed_output;
-    if (!parsed) {
-      return { status: "error", message: "The model returned an unreadable response.", findings: [], latencyMs, usage, masked: mask.map.size, unmask: mask.unmask, model: response.model };
-    }
-    return { status: "ok", findings: parsed.findings, latencyMs, usage, masked: mask.map.size, unmask: mask.unmask, model: response.model };
-  } catch (err) {
-    return { status: "error", message: describeAiError(err), findings: [], latencyMs: Date.now() - started, masked: mask.map.size, unmask: mask.unmask };
+  const res = await generateStructured({
+    tier: "review",
+    system: renderKit(kit, brand, rulebookVersion),
+    cacheSystem: true,
+    user,
+    schema: AiReview,
+    effort: "medium",
+  });
+  const base = { latencyMs: res.latencyMs, usage: res.usage, masked: mask.map.size, unmask: mask.unmask, model: res.model };
+  if (res.status !== "ok" || !res.data) {
+    return { ...base, status: res.status === "refused" ? "refused" : "error", message: res.message, findings: [] };
   }
+  const findings = res.data.findings.map((f) => ({ ...f, suggestion: f.suggestion.trim() === "NO_FIX" ? null : f.suggestion }));
+  return { ...base, status: "ok", findings };
 }

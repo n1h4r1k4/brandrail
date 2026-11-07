@@ -39,14 +39,14 @@ flowchart LR
   UI -- server actions --> API[Next.js server<br/>auth by sandbox cookie]
   API --> RE[Rule-based engine<br/>deterministic detectors]
   API --> PG[Privacy gateway<br/>mask watch-list + PII]
-  PG --> CL[Claude API<br/>Sonnet 5.5 review · Haiku 5.5 intent]
+  PG --> CL[AI provider<br/>Gemini free tier, or Claude]
   CL --> VF[Verifier<br/>evidence-or-silence]
   RE --> VF
   VF --> DB[(Postgres<br/>Neon in prod · PGlite locally)]
   API --> DB
 ```
 
-**Stack:** Next.js 15 (App Router, server actions, TypeScript) · Tailwind CSS 4 · Drizzle ORM · Postgres (Neon on Vercel; embedded PGlite for local development) · Anthropic TypeScript SDK · tesseract.js · unpdf · mammoth · diff · lucide-react.
+**Stack:** Next.js 15 (App Router, server actions, TypeScript) · Tailwind CSS 4 · Drizzle ORM · Postgres (Neon on Vercel; embedded PGlite for local development) · Google Gen AI SDK and Anthropic TypeScript SDK behind one provider interface · tesseract.js · unpdf · mammoth · diff · lucide-react.
 
 ### The hard part: AI findings people can trust
 
@@ -54,7 +54,7 @@ A brand checker fails if it invents rules, misquotes text or over-flags, because
 
 1. **Rule-based first.** 24 of the 29 rules have deterministic detectors: terminology, banned words, competitor names, watch-list leaks, personal data, unverified figures (any number not in an in-date fact), expired or superseded facts (with the aligned replacement suggested), superlatives without substantiation, green claims, regulator endorsements, missing disclaimers, tagline form, exclamation/caps/emoji limits, readability, alt text, WCAG contrast in images, palette distance (CIEDE2000). Same text + same rulebook = same result.
 2. **Privacy gateway.** Watch-list terms and personal data are replaced with placeholders before any text leaves the server, and restored afterwards.
-3. **Grounded AI review.** Claude Sonnet 5.5 receives the rulebook and Facts Ledger (prompt-cached), the content, the confirmed intent and the rule-based findings, and returns schema-bound JSON. Each finding must carry an exact quote, a rule code, any fact codes and a replacement for the quoted span. Its job is the part that needs judgement: tone, messaging, audience fit and implied claims.
+3. **Grounded AI review.** The model (Gemini on the free deployment, Claude Sonnet 5.5 when configured) receives the rulebook and Facts Ledger (cached where the provider supports it), the content, the confirmed intent and the rule-based findings, and returns schema-bound JSON. Each finding must carry an exact quote, a rule code, any fact codes and a replacement for the quoted span. Its job is the part that needs judgement: tone, messaging, audience fit and implied claims.
 4. **Verifier (evidence-or-silence).** An AI finding is dropped if its rule doesn't exist in the active version, its quote isn't in the text, its confidence is below 0.5, or it duplicates a rule-based finding (its rewrite is merged into the rule-based finding when that one had none). Rewrites are re-checked: a rewrite is withheld if it adds a figure not in the Facts Ledger, drops the confirmed call to action, or makes a rule-based check fail. Every dropped item and the reason is shown under *How this was checked*.
 5. **Humans decide.** Nothing is auto-applied or auto-approved. Severity comes from the rule, not from the model.
 
@@ -64,6 +64,7 @@ A brand checker fails if it invents rules, misquotes text or over-flags, because
 - **Postgres via Drizzle, with PGlite locally.** One schema, real SQL in production (Neon) and a zero-setup embedded database for development. Migrations are embedded and applied at runtime under an advisory lock.
 - **Sandbox per visitor instead of accounts.** Judges must reach the product without signing in, so each visitor gets an isolated workspace (unguessable ID in an httpOnly cookie) and switches between four personas. Role permissions are enforced on the server in every action.
 - **OCR in the browser.** Images never need to leave the user's machine for OCR, contrast or palette analysis, and the server stays light.
+- **Provider-agnostic AI layer, free by default.** All AI calls go through one structured-output interface (`src/lib/ai/structured.ts`). With an Anthropic key it uses Claude (Sonnet 5.5 for review, Haiku 5.5 for intent, with prompt caching and server-side refusal fallback). Without one it uses Google Gemini's free tier (`gemini-flash-latest`), so the hosted demo costs nothing to run. Without either it runs rule-based checks only and says so. The verifier treats every provider's output the same way.
 - **Whole-rulebook prompting with caching instead of vector retrieval.** A rulebook of ~30 rules and ~15 facts fits comfortably in context. Sending all of it (cached) is more accurate than top-k retrieval at this size. pgvector retrieval is planned only if rulebooks grow large.
 
 ## Evaluation
@@ -84,8 +85,8 @@ These numbers are optimistic: the golden set was written alongside the rules. Ro
 
 | Item | Use |
 |---|---|
-| Anthropic Claude API, `claude-sonnet-5-5` | Content review (structured output, prompt caching, server-side refusal fallback), Rule Compiler |
-| Anthropic Claude API, `claude-haiku-5-5` | Intent extraction |
+| Google Gemini API (free tier), `gemini-flash-latest` / `gemini-flash-lite-latest` | Default AI provider on the hosted demo: content review, Rule Compiler, intent extraction (JSON-schema output) |
+| Anthropic Claude API, `claude-sonnet-5-5` / `claude-haiku-5-5` | Used instead of Gemini when an Anthropic key is configured (structured output, prompt caching, server-side refusal fallback) |
 | tesseract.js (Apache-2.0) | In-browser OCR |
 | unpdf, mammoth | PDF and DOCX text extraction |
 | Drizzle ORM, postgres.js, PGlite | Database access, local embedded Postgres |
@@ -94,11 +95,14 @@ These numbers are optimistic: the golden set was written alongside the rules. Ro
 
 **Data:** all demo data (the Nimbus Pay brand book, facts, sample content, sample creative and guidelines PDF) is fictional and was created for this project. No real company's material is used.
 
+**Screenshots:** [landing](docs/screenshots/landing.png) · [dashboard](docs/screenshots/dashboard.png) · [review](docs/screenshots/review.png) · [verified](docs/screenshots/verified.png) · [insights](docs/screenshots/insights.png)
+
 **Templates and AI assistance (disclosure):** the project was started from `create-next-app` (boilerplate). It is a solo build, and the implementation was written with heavy use of **Claude Code** (Anthropic's AI coding assistant) under the author's direction. Commits made with it carry a `Co-Authored-By: Claude` trailer.
 
 ## Privacy and security
 
-- **Text sent to the AI:** only masked text is sent to the Claude API (watch-list terms, emails, phone, Aadhaar-like and PAN-like numbers become placeholders). OCR, contrast and colour analysis run in the browser.
+- **Text sent to the AI:** only masked text is sent to the AI provider (watch-list terms, emails, phone, Aadhaar-like and PAN-like numbers become placeholders). OCR, contrast and colour analysis run in the browser.
+- **Free-tier caveat:** on Gemini's free tier, Google may use submitted text to improve its products. That is acceptable for this demo (masked, fictional data), but a real deployment handling confidential material should use a paid tier or Claude.
 - **Sandbox access:** each sandbox is reachable only through its unguessable ID in an httpOnly, SameSite cookie. Every server action re-checks the workspace and the persona's permissions.
 - **Overrides:** an override always needs a reason, and only the owning role may give it (Compliance for claims, legal and confidentiality).
 - **Audit log:** append-only and hash-chained.
@@ -116,12 +120,12 @@ These numbers are optimistic: the golden set was written alongside the rules. Ro
 ```bash
 git clone https://github.com/n1h4r1k4/brandrail.git && cd brandrail
 npm install
-cp .env.example .env.local   # add ANTHROPIC_API_KEY to enable the AI review (optional)
+cp .env.example .env.local   # optional: add a free GEMINI_API_KEY (aistudio.google.com) to enable the AI review
 npm run dev                  # http://localhost:3000, uses an embedded PGlite database in ./.data
 npm run eval                 # rule-based evaluation; add -- --ai for the AI review
 ```
 
-**Deploy:** import the repo in Vercel and add a Neon Postgres database from the Storage tab (this sets `DATABASE_URL`). Then add `ANTHROPIC_API_KEY` as an environment variable. Migrations run automatically on first request.
+**Deploy (free):** import the repo in Vercel (Hobby plan), add a Neon Postgres database from the Storage tab (free plan; this sets `DATABASE_URL`), and add `GEMINI_API_KEY` as an environment variable. Migrations run automatically on the first request.
 
 ## Contribution
 

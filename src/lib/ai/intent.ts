@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { aiEnabled, claude, FAST_MODEL } from "./client";
+import { aiEnabled } from "./client";
+import { generateStructured } from "./structured";
 import { createMask } from "./privacy";
 import type { Intent } from "../db/schema";
 
@@ -16,27 +16,18 @@ const IntentSchema = z.object({
 export async function extractIntent(text: string, channel: string, audience: string, watch: string[]): Promise<Intent | null> {
   if (!aiEnabled() || !text.trim()) return null;
   const mask = createMask(watch);
-  try {
-    const res = await claude().messages.parse({
-      model: FAST_MODEL,
-      max_tokens: 4000,
-      output_config: { effort: "low", format: zodOutputFormat(IntentSchema) },
-      messages: [
-        {
-          role: "user",
-          content: `Summarise the intent of this ${channel} content (stated audience: ${audience}). Describe what the creator wants, not whether it is good.\n\n<content>\n${mask.mask(text)}\n</content>`,
-        },
-      ],
-    });
-    const p = res.parsed_output;
-    if (!p) return null;
-    return {
-      goal: mask.unmask(p.goal),
-      audience: mask.unmask(p.audience),
-      keyMessage: mask.unmask(p.key_message),
-      cta: mask.unmask(p.cta),
-    };
-  } catch {
-    return null;
-  }
+  const res = await generateStructured({
+    tier: "fast",
+    user: `Summarise the intent of this ${channel} content (stated audience: ${audience}). Describe what the creator wants, not whether it is good.\n\n<content>\n${mask.mask(text)}\n</content>`,
+    schema: IntentSchema,
+    effort: "low",
+  });
+  const p = res.data;
+  if (res.status !== "ok" || !p) return null;
+  return {
+    goal: mask.unmask(p.goal),
+    audience: mask.unmask(p.audience),
+    keyMessage: mask.unmask(p.key_message),
+    cta: mask.unmask(p.cta),
+  };
 }

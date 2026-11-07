@@ -66,7 +66,7 @@ export function NewContentForm({ samples, ai }: { samples: Sample[]; ai: boolean
   function submit() {
     setError(null);
     start(async () => {
-      setBusy(ai ? "Running rule-based checks, then a grounded AI review with Claude… (about 10–30 s)" : "Running rule-based checks…");
+      setBusy(ai ? "Running rule-based checks, then the grounded AI review… (about 10–30 s)" : "Running rule-based checks…");
       const res = await createContent({
         title, channel, audience, source, body, altText,
         imageData: image?.dataUrl ?? null, imageText, imageAnalysis: image?.analysis ?? null,
@@ -153,14 +153,14 @@ export function NewContentForm({ samples, ai }: { samples: Sample[]; ai: boolean
           </Button>
           {busy && <span className="flex items-center gap-2 text-sm text-muted"><Loader2 size={14} className="animate-spin" /> {busy}</span>}
         </div>
-        {!ai && <p className="mt-3 text-xs text-major">AI review is off on this deployment (no Claude API key). Rule-based checks still run.</p>}
+        {!ai && <p className="mt-3 text-xs text-major">AI review is off on this deployment (no AI key configured). Rule-based checks still run.</p>}
       </Card>
 
       <aside className="space-y-3">
         <h2 className="text-sm font-semibold text-ink">Try a sample</h2>
         {samples.map((s) => (
           <button key={s.key} type="button" disabled={working} onClick={() => loadSample(s)}
-            className="block w-full rounded-xl border border-line bg-white p-3 text-left transition hover:border-accent/50 hover:shadow-sm disabled:opacity-50">
+            className="block w-full rounded-2xl border border-line/80 bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lift disabled:opacity-50">
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-semibold text-ink">{s.title}</span>
               {s.image && <Tag tone="accent">image</Tag>}
