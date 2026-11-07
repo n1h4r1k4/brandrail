@@ -1,9 +1,8 @@
 "use client";
 // Brandrail's landing world (original, built in code with three.js):
 // a lavender meadow with wind-blown grass, low-poly rocks and a reflective lake, drifting clouds,
-// floating leaves, a particle sculpture that morphs between Brandrail shapes as you scroll
-// (shield → globe → checkpoint ring → heart → check mark), and guardrails carrying content cards
-// that arrive flagged and leave verified.
+// rounded standing stones, floating leaves, and a particle sculpture that morphs between
+// Brandrail shapes as you scroll (shield → globe → checkpoint ring → heart → check mark).
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
@@ -17,10 +16,10 @@ export type Quality = "high" | "low";
 
 const PALETTE = {
   day: {
-    zenith: "#a796ec", horizon: "#f0d4f6", fog: "#c9b4ef", fogDensity: 0.011,
-    grassBase: "#3b0f7a", grassTip: "#9d4edd", ground: "#4c1d95", sand: "#b8a3d9",
-    rock: "#73639a", water: "#c7b5f2", hemiSky: "#e9dcff", hemiGround: "#5b21b6", sun: "#ffd6f2",
-    cloud: 0.75, leaf: "#3d2a63", rail: "#7c3aed", sculptureAdditive: false,
+    zenith: "#a493e6", horizon: "#e6c6f0", fog: "#c3aeea", fogDensity: 0.0105,
+    grassBase: "#3d0c80", grassTip: "#a24ee8", ground: "#55179a", sand: "#a995cf",
+    rock: "#8a7499", water: "#bfa9ee", hemiSky: "#efe4ff", hemiGround: "#6d28d9", sun: "#ffe0f4",
+    cloud: 0.85, leaf: "#3d2a63", rail: "#7c3aed", sculptureAdditive: false,
   },
   night: {
     zenith: "#06051a", horizon: "#2b1a5e", fog: "#1a1240", fogDensity: 0.018,
@@ -112,37 +111,6 @@ function cloudTexture() {
   return t;
 }
 
-function cardTexture(verified: boolean) {
-  const c = document.createElement("canvas");
-  c.width = 200;
-  c.height = 260;
-  const g = c.getContext("2d")!;
-  g.fillStyle = "#faf8ff";
-  g.beginPath();
-  g.roundRect(4, 4, 192, 252, 18);
-  g.fill();
-  g.lineWidth = 6;
-  g.strokeStyle = verified ? "#14b8a6" : "#f59e0b";
-  g.stroke();
-  g.fillStyle = verified ? "#ccfbf1" : "#fef3c7";
-  g.beginPath();
-  g.roundRect(18, 18, 100, 22, 11);
-  g.fill();
-  g.fillStyle = verified ? "#0f766e" : "#b45309";
-  g.font = "bold 13px Arial";
-  g.fillText(verified ? "✓ VERIFIED" : "! FLAGGED", 28, 34);
-  for (let i = 0; i < 7; i++) {
-    const hl = i === 2;
-    g.fillStyle = hl ? (verified ? "#5eead4" : "#fcd34d") : "#d6d0ee";
-    g.beginPath();
-    g.roundRect(18, 60 + i * 26, i % 3 === 2 ? 110 : 160, hl ? 12 : 8, 4);
-    g.fill();
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-
 // Camera and sculpture key frames, one per story section.
 // cam[1] is the height above the local ground.
 const KEYS = [
@@ -214,12 +182,12 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     scene.add(new THREE.Mesh(gGeo, keep(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }))));
 
     // ---- grass (instanced blades with wind in the vertex shader)
-    const bladeCount = hi ? 46000 : 12000;
+    const bladeCount = hi ? 90000 : 22000;
     const blade = new THREE.InstancedBufferGeometry();
     const segs = 4;
     const bv: number[] = [], bi: number[] = [];
     for (let s = 0; s <= segs; s++) {
-      const t = s / segs, w = 0.032 * (1 - t * 0.92);
+      const t = s / segs, w = 0.036 * (1 - t * 0.9);
       bv.push(-w, t, 0, w, t, 0);
     }
     for (let s = 0; s < segs; s++) {
@@ -232,7 +200,7 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     const rg = rand(11);
     let placed = 0;
     for (let tries = 0; placed < bladeCount && tries < bladeCount * 4; tries++) {
-      const x = (rg() - 0.5) * 120, z = 34 - rg() * 95;
+      const x = (rg() - 0.5) * 110, z = 34 - Math.pow(rg(), 1.5) * 90;
       const h = terrainH(x, z);
       if (h < WATER_Y + 0.25) continue;
       offs.set([x, h, z, rg()], placed * 4);
@@ -251,7 +219,7 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
         attribute vec4 offset; uniform float time; varying float vT; varying float vDepth;
         void main(){
           float seed = offset.w;
-          float h = 0.55 + seed * 0.75;
+          float h = 0.38 + seed * seed * 0.75;
           vec3 p = position; vT = p.y; p.y *= h;
           float ang = seed * 6.2831;
           p = vec3(p.x*cos(ang), p.y, p.x*sin(ang));
@@ -275,24 +243,38 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     grass.frustumCulled = false;
     scene.add(grass);
 
-    // ---- rocks
-    const rockMat = keep(new THREE.MeshStandardMaterial({ color: P.rock, flatShading: true, roughness: 0.95 }));
+    // ---- rounded standing stones: a ring behind the lake and scattered groups further out
+    const rockMat = keep(new THREE.MeshStandardMaterial({ color: P.rock, flatShading: true, roughness: 0.9 }));
     const rr = rand(5);
-    for (let i = 0; i < (hi ? 90 : 45); i++) {
-      const g = keep(new THREE.IcosahedronGeometry(1, 0));
+    const stoneGeo = (seed: number) => {
+      const g = keep(new THREE.IcosahedronGeometry(1, 2));
       const p2 = g.attributes.position as THREE.BufferAttribute;
-      for (let k = 0; k < p2.count; k++) p2.setXYZ(k, p2.getX(k) * (0.8 + rr() * 0.4), p2.getY(k) * (0.8 + rr() * 0.5), p2.getZ(k) * (0.8 + rr() * 0.4));
+      const r3 = rand(seed);
+      for (let k = 0; k < p2.count; k++) {
+        const j = 0.95 + r3() * 0.1;
+        const y = p2.getY(k);
+        p2.setXYZ(k, p2.getX(k) * j * (y > 0 ? 1 - y * 0.18 : 1), y * j, p2.getZ(k) * j * (y > 0 ? 1 - y * 0.18 : 1));
+      }
       g.computeVertexNormals();
-      const m = new THREE.Mesh(g, rockMat);
-      const behindLake = i < 26;
-      const a = behindLake ? -Math.PI / 2 + (rr() - 0.5) * 1.6 : rr() * Math.PI * 2;
-      const dist = behindLake ? 22 + rr() * 10 : 55 + rr() * 45;
-      const x = LAKE.x + Math.cos(a) * dist * (behindLake ? 1.2 : 1), z = LAKE.z + Math.sin(a) * dist * (behindLake ? 0.7 : 1);
-      const s = behindLake ? 1.2 + rr() * 2 : 2 + rr() * 4;
-      m.scale.set(s * (0.7 + rr() * 0.5), s * (1.2 + rr() * 1.4), s * (0.7 + rr() * 0.5));
-      m.position.set(x, terrainH(x, z) + s * 0.6, z);
-      m.rotation.set(rr() * 0.3, rr() * Math.PI, rr() * 0.3);
+      return g;
+    };
+    const geos = Array.from({ length: 8 }, (_, i) => stoneGeo(40 + i));
+    const addStone = (x: number, z: number, s: number, tall: number) => {
+      const m = new THREE.Mesh(geos[Math.floor(rr() * geos.length)], rockMat);
+      m.scale.set(s * (0.75 + rr() * 0.4), s * tall, s * (0.6 + rr() * 0.35));
+      m.position.set(x, terrainH(x, z) + s * tall * 0.55, z);
+      m.rotation.set((rr() - 0.5) * 0.2, rr() * Math.PI, (rr() - 0.5) * 0.25);
       scene.add(m);
+    };
+    for (let i = 0; i < (hi ? 46 : 26); i++) {
+      // the ring behind the lake, like a row of old stones on the far shore
+      const a = -Math.PI / 2 + (i / (hi ? 46 : 26) - 0.5) * 3.4 + (rr() - 0.5) * 0.08;
+      const d = 24 + rr() * 6;
+      addStone(LAKE.x + Math.cos(a) * d * 1.35, LAKE.z + Math.sin(a) * d * 0.75, 1.5 + rr() * 1.3, 1.0 + rr() * 0.9);
+    }
+    for (let i = 0; i < (hi ? 50 : 24); i++) {
+      const a = rr() * Math.PI * 2, d = 58 + rr() * 50;
+      addStone(LAKE.x + Math.cos(a) * d, LAKE.z + Math.sin(a) * d, 2.5 + rr() * 3.5, 0.9 + rr() * 1.0);
     }
 
     // ---- lake
@@ -315,7 +297,7 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     const clouds: THREE.Sprite[] = [];
     const rc = rand(9);
     for (let i = 0; i < (hi ? 26 : 12); i++) {
-      const m = keep(new THREE.SpriteMaterial({ map: cloudTex, color: rc() < 0.5 ? "#ffd1f0" : "#ffffff", transparent: true, opacity: P.cloud * (0.6 + rc() * 0.4), depthWrite: false, fog: false }));
+      const m = keep(new THREE.SpriteMaterial({ map: cloudTex, color: rc() < 0.7 ? "#f6bfe6" : "#ffe4f6", transparent: true, opacity: P.cloud * (0.6 + rc() * 0.4), depthWrite: false, fog: false }));
       const s = new THREE.Sprite(m);
       const sc = 60 + rc() * 90;
       s.scale.set(sc * 1.6, sc, 1);
@@ -348,7 +330,7 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     });
 
     // ---- particle sculpture
-    const N = hi ? 7000 : 3000;
+    const N = hi ? 4200 : 2200;
     const S = shapes(N);
     const sGeo = keep(new THREE.BufferGeometry());
     const sPos = new Float32Array(N * 3);
@@ -359,7 +341,7 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     for (let i = 0; i < N; i++) {
       const c = new THREE.Color(palette[Math.floor(rp() * palette.length)]);
       sCol.set([c.r, c.g, c.b], i * 3);
-      sSize[i] = 0.6 + rp() * 0.9;
+      sSize[i] = 0.7 + rp() * 1.1;
     }
     sGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3));
     sGeo.setAttribute("color", new THREE.BufferAttribute(sCol, 3));
@@ -367,11 +349,16 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     const sMat = keep(new THREE.ShaderMaterial({
       transparent: true, depthWrite: !P.sculptureAdditive,
       blending: P.sculptureAdditive ? THREE.AdditiveBlending : THREE.NormalBlending,
-      uniforms: { scale: { value: el.clientHeight * 0.16 } },
+      uniforms: { scale: { value: el.clientHeight * 0.24 } },
       vertexShader: `attribute vec3 color; attribute float size; uniform float scale; varying vec3 vC;
         void main(){ vC = color; vec4 mv = modelViewMatrix * vec4(position,1.0); gl_PointSize = size * scale / -mv.z; gl_Position = projectionMatrix * mv; }`,
       fragmentShader: `varying vec3 vC; void main(){ vec2 d = gl_PointCoord - 0.5; float r = length(d); if (r > 0.5) discard;
-        float shade = 1.0 - r*0.9; gl_FragColor = vec4(vC * (0.8 + 0.4*shade), smoothstep(0.5, 0.4, r));
+        // shade each point like a small glossy ball lit from the top left
+        vec3 n = vec3(d.x * 2.0, -d.y * 2.0, sqrt(max(0.0, 1.0 - 4.0 * r * r)));
+        float diff = clamp(dot(n, normalize(vec3(-0.5, 0.6, 0.8))), 0.0, 1.0);
+        float spec = pow(clamp(dot(reflect(-normalize(vec3(-0.5, 0.6, 0.8)), n), vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 18.0);
+        vec3 col = vC * (0.55 + 0.6 * diff) + vec3(spec * 0.55);
+        gl_FragColor = vec4(col, smoothstep(0.5, 0.44, r));
         #include <colorspace_fragment>
         }`,
     }));
@@ -380,34 +367,6 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
     scene.add(sculpture);
     const jitter = new Float32Array(N * 3);
     for (let i = 0; i < N * 3; i++) jitter[i] = rp() - 0.5;
-
-    // ---- guardrails across the meadow with flagged → verified cards
-    const railPts = [[-16, 30], [-9, 22], [-3, 15], [3, 9.5], [9, 6]].map(([x, z]) => new THREE.Vector3(x, terrainH(x, z) + 0.15, z));
-    const railPath = new THREE.CatmullRomCurve3(railPts);
-    const up = new THREE.Vector3(0, 1, 0);
-    const railMat = keep(new THREE.MeshStandardMaterial({ color: P.rail, emissive: P.rail, emissiveIntensity: theme === "night" ? 1.6 : 0.6, roughness: 0.4 }));
-    for (const side of [-1, 1]) {
-      const c = new THREE.CatmullRomCurve3(Array.from({ length: 60 }, (_, i) => {
-        const t = i / 59, p = railPath.getPointAt(t), right = railPath.getTangentAt(t).cross(up).normalize();
-        return p.add(right.multiplyScalar(side * 0.75)).setY(terrainH(p.x, p.z) + 0.18);
-      }));
-      scene.add(new THREE.Mesh(keep(new THREE.TubeGeometry(c, 160, 0.04, 6)), railMat));
-    }
-    const gateT = 0.55;
-    const gatePos = railPath.getPointAt(gateT).add(new THREE.Vector3(0, 1.25, 0));
-    const ringMat = keep(new THREE.MeshStandardMaterial({ color: "#2dd4bf", emissive: "#2dd4bf", emissiveIntensity: theme === "night" ? 2.2 : 0.9, transparent: true }));
-    const ring = new THREE.Mesh(keep(new THREE.TorusGeometry(1.45, 0.045, 12, 96)), ringMat);
-    ring.position.copy(gatePos);
-    ring.lookAt(gatePos.clone().add(railPath.getTangentAt(gateT)));
-    scene.add(ring);
-    const flaggedTex = keep(cardTexture(false)), verifiedTex = keep(cardTexture(true));
-    const cardGeo = keep(new THREE.PlaneGeometry(0.75, 0.97));
-    const cards = Array.from({ length: 6 }, (_, i) => {
-      const mat = keep(new THREE.MeshBasicMaterial({ map: flaggedTex, side: THREE.DoubleSide, transparent: true }));
-      const m = new THREE.Mesh(cardGeo, mat);
-      scene.add(m);
-      return { m, mat, off: i / 6 };
-    });
 
     // ---- post-processing
     let composer: EffectComposer | null = null;
@@ -438,14 +397,20 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
       camera.updateProjectionMatrix();
       renderer.setSize(el.clientWidth, el.clientHeight);
       composer?.setSize(el.clientWidth, el.clientHeight);
-      sMat.uniforms.scale.value = el.clientHeight * 0.16;
+      sMat.uniforms.scale.value = el.clientHeight * 0.24;
     };
     window.addEventListener("resize", onResize);
 
+    // render only while the story sections (or anything marked data-world="show") are on screen
+    const showing = new Set<Element>();
     let visible = true;
-    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0 });
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) { if (e.isIntersecting) showing.add(e.target); else showing.delete(e.target); }
+      visible = showing.size > 0;
+    }, { threshold: 0 });
     const container = document.getElementById(containerId);
     if (container) io.observe(container);
+    document.querySelectorAll("[data-world='show']").forEach((n) => io.observe(n));
 
     const v3 = (a: number[]) => new THREE.Vector3(a[0], a[1], a[2]);
     const camPos = new THREE.Vector3(), look = new THREE.Vector3(), scPos = new THREE.Vector3();
@@ -503,22 +468,6 @@ export function World({ theme, quality, sections = 5, containerId }: { theme: Th
         c.position.x += 0.02;
         if (c.position.x > 280) c.position.x = -280;
       }
-      for (const c of cards) {
-        const u = (c.off + t * 0.03) % 1;
-        const pt = railPath.getPointAt(u);
-        c.m.position.set(pt.x, terrainH(pt.x, pt.z) + 1.2 + Math.sin(t * 2 + c.off * 9) * 0.05, pt.z);
-        c.m.lookAt(camera.position.x, c.m.position.y, camera.position.z);
-        const map = u > gateT ? verifiedTex : flaggedTex;
-        if (c.mat.map !== map) { c.mat.map = map; c.mat.needsUpdate = true; }
-        // never let a card fill the screen when the camera passes close by
-        c.mat.opacity = smooth(3, 6, c.m.position.distanceTo(camera.position));
-        c.m.visible = c.mat.opacity > 0.01;
-      }
-      ring.rotation.z = t * 0.4;
-      // the checkpoint ring belongs to the opening shots; later angles only see it edge-on
-      ringMat.opacity = 1 - smooth(1.1, 1.7, p);
-      ring.visible = ringMat.opacity > 0.01 && ring.position.distanceTo(camera.position) > 5;
-
       if (composer) composer.render();
       else renderer.render(scene, camera);
     };

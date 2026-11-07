@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { Settings, Sparkles, X } from "lucide-react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { useSound } from "@/components/sound";
 import type { Quality, Theme } from "./world";
 
@@ -209,31 +210,22 @@ export function Badge3D({ className }: { className?: string }) {
     const d = new THREE.DirectionalLight("#ffffff", 1.6);
     d.position.set(3, 4, 5);
     scene.add(d);
-    const shield = new THREE.Shape();
-    shield.moveTo(0, 1.6);
-    shield.lineTo(1.25, 1.1);
-    shield.lineTo(1.25, 0.1);
-    shield.bezierCurveTo(1.25, -0.9, 0.5, -1.45, 0, -1.7);
-    shield.bezierCurveTo(-0.5, -1.45, -1.25, -0.9, -1.25, 0.1);
-    shield.lineTo(-1.25, 1.1);
-    shield.closePath();
-    const geo = new THREE.ExtrudeGeometry(shield, { depth: 0.5, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08, bevelSegments: 5 });
-    geo.center();
-    const bodyMat = new THREE.MeshPhysicalMaterial({
-      color: "#d9ccff", roughness: 0.18, metalness: 0.35, clearcoat: 1, clearcoatRoughness: 0.08,
-      iridescence: 0.9, iridescenceIOR: 1.4, iridescenceThicknessRange: [180, 520], sheen: 0.6, sheenColor: new THREE.Color("#f0abfc"),
-    });
+    // a dark glossy slab carrying the Brandrail check mark
+    const geo = new RoundedBoxGeometry(1.7, 2.7, 0.42, 6, 0.12);
+    const bodyMat = new THREE.MeshPhysicalMaterial({ color: "#0e0b14", roughness: 0.32, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.1, envMapIntensity: 0.35 });
     const body = new THREE.Mesh(geo, bodyMat);
     const check = new THREE.Shape();
     check.moveTo(-0.62, 0.05); check.lineTo(-0.22, -0.38); check.lineTo(0.66, 0.55); check.lineTo(0.48, 0.72);
     check.lineTo(-0.22, -0.02); check.lineTo(-0.44, 0.24); check.closePath();
     const cGeo = new THREE.ExtrudeGeometry(check, { depth: 0.12, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2 });
-    const markMat = new THREE.MeshStandardMaterial({ color: "#7c3aed", emissive: "#6d28d9", emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.2 });
+    const markMat = new THREE.MeshStandardMaterial({ color: "#a855f7", emissive: "#7c3aed", emissiveIntensity: 0.55, roughness: 0.3, metalness: 0.1 });
     const mark = new THREE.Mesh(cGeo, markMat);
-    mark.position.z = 0.3;
+    mark.position.set(0, -0.35, 0.21);
+    mark.scale.setScalar(0.95);
     const back = new THREE.Mesh(cGeo, markMat); // same mark on the back face, mirrored
     back.rotation.y = Math.PI;
-    back.position.z = -0.3;
+    back.position.set(0, -0.35, -0.21);
+    back.scale.setScalar(0.95);
     const group = new THREE.Group();
     group.add(body, mark, back);
     scene.add(group);
