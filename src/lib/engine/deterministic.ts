@@ -99,6 +99,14 @@ function detectPatterns(ctx: Ctx, rule: EngineRule) {
   }
 }
 
+/** True when the span sits inside an email address or URL (e.g. support@nimbuspay.example). */
+function insideAddress(text: string, span: Span) {
+  let a = span.start, b = span.end;
+  while (a > 0 && !/\s/.test(text[a - 1])) a--;
+  while (b < text.length && !/\s/.test(text[b])) b++;
+  return /@|:\/\/|www\./i.test(text.slice(a, b));
+}
+
 function termRegex(term: string) {
   // "Nimbus Pay" / "AutoPay" -> tolerate case, missing or extra spaces and hyphens.
   const parts = term.split(/\s+|(?<=[a-z])(?=[A-Z])/).map(escapeRegex);
@@ -111,7 +119,7 @@ function detectTerms(ctx: Ctx, rule: EngineRule) {
     for (const t of terms) {
       if (t.kind === "preferred") {
         for (const m of findAll(termRegex(t.term), text)) {
-          if (m.text === t.term) continue;
+          if (m.text === t.term || insideAddress(text, m)) continue;
           add(ctx, rule, field, m, `Write "${t.term}" exactly as shown, not "${m.text}".`, field === "body" ? t.term : null);
         }
       } else {
@@ -131,7 +139,7 @@ function detectTerms(ctx: Ctx, rule: EngineRule) {
 }
 
 const NUMBER_CLAIM =
-  /(?:₹|\brs\.?|\binr)\s?\d[\d,]*(?:\.\d+)?(?:\s?(?:lakh|crore|cr|k)\b)?|(?<![\w.])\d[\d,]*(?:\.\d+)?\s?(?:%|percent\b|x\b|times\b|lakh\b|crore\b|cr\b|million\b|mn\b|billion\b|bn\b|seconds?\b|secs?\b|s\b|minutes?\b|mins?\b|languages\b|users\b|customers\b|merchants\b|reviews\b|stars?\b)|(?<![\w.])\d(?:\.\d)?\s?\/\s?5\b/gi;
+  /(?:₹|\brs\.?|\binr)\s?\d[\d,]*(?:\.\d+)?(?:\s?(?:lakh|crore|cr|k)\b)?|(?<![\w.])\d[\d,]*(?:\.\d+)?\s?(?:%|percent\b|x\b|times\b|lakh\b|crore\b|cr\b|million\b|mn\b|billion\b|bn\b|seconds?\b|secs?\b|s\b|minutes?\b|mins?\b|languages\b|users\b|customers\b|merchants\b|reviews\b|stars?\b)|(?<![\w.])\d(?:\.\d)?\s?\/\s?5\b|(?<=\brated )\d\.\d\b/gi;
 
 function detectNumbers(ctx: Ctx, rule: EngineRule) {
   const { kit } = ctx;
@@ -330,7 +338,11 @@ function tidy(kit: Kit, list: DraftFinding[]) {
   const filtered = list.filter((f) => {
     const r = kit.rules.find((x) => x.code === f.ruleCode);
     if (r?.params.detectors?.includes("unverified_numbers")) {
-      return !list.some((o) => o !== f && o.field === f.field && overlaps(o, f) && ["claims", "legal"].includes(cat.get(o.ruleCode) ?? ""));
+      return !list.some((o) => {
+        if (o === f || o.field !== f.field || !overlaps(o, f) || !["claims", "legal"].includes(cat.get(o.ruleCode) ?? "")) return false;
+        // A missing-disclaimer finding quotes a whole sentence; it doesn't cover the figure inside it.
+        return !kit.rules.find((x) => x.code === o.ruleCode)?.params.detectors?.includes("disclaimer");
+      });
     }
     return true;
   });

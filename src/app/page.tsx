@@ -48,7 +48,7 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
             </div>
             <p className="mt-4 max-w-xl text-xs leading-relaxed text-slate-400">
               No sign-up. Each visitor gets a private sandbox with a fictional brand, <strong className="text-slate-300">Nimbus Pay</strong> (an
-              Indian payments app): a 30-rule rulebook, a Facts Ledger with expiry dates and some review history. Switch between four personas
+              Indian payments app): a 29-rule rulebook, a Facts Ledger with expiry dates and some review history. Switch between four personas
               (creator, brand reviewer, compliance, brand admin) from the top bar.
             </p>
           </div>
