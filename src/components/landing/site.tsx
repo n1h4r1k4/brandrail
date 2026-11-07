@@ -44,10 +44,11 @@ export function Lede({ children, className }: { children: React.ReactNode; class
 const BTN = "inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-[15px] font-medium text-white shadow-[0_12px_30px_-12px_rgba(79,70,229,0.8)] transition hover:bg-indigo-500";
 const BTN_GHOST = "inline-flex items-center gap-2 rounded-full border border-current/30 px-5 py-2.5 text-[15px] transition hover:bg-current/10";
 
-export function DemoForm({ children, className, ghost }: { children: React.ReactNode; className?: string; ghost?: boolean }) {
+export function DemoForm({ children, className, ghost, next }: { children: React.ReactNode; className?: string; ghost?: boolean; next?: string }) {
   const { play } = useSound();
   return (
     <form action="/api/demo" method="post" onSubmit={() => play("success")}>
+      {next && <input type="hidden" name="next" value={next} />}
       <button className={className ?? (ghost ? BTN_GHOST : BTN)}>{children}</button>
     </form>
   );

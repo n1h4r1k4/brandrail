@@ -36,7 +36,7 @@ function Inner({ index, hasSession, showGate, aiNote }: Props) {
             <h1 className={clsx(HEAD, "mt-5")} style={HEAD_SIZE}>{s.name}</h1>
             <Lede className="mt-5 text-[var(--l-muted)]">{s.blurb}.</Lede>
             <div className="mt-8 flex flex-wrap gap-3">
-              <DemoForm>Try it live <Go /></DemoForm>
+              <DemoForm next={s.slug}>Open {s.name} in the demo <Go /></DemoForm>
             </div>
           </div>
           <ProductShot screen={s} tall={false} />

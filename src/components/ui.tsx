@@ -8,18 +8,18 @@ export function Card({ className, children }: { className?: string; children: Re
 
 /** Brandrail mark: two rails converging on a check, inside a rounded square. */
 export function LogoMark({ size = 28 }: { size?: number }) {
+  // the gradient tile is CSS, so every copy renders even when another copy sits in a hidden element
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="br-g" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#818cf8" />
-          <stop offset="1" stopColor="#2dd4bf" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="9" fill="url(#br-g)" />
-      <path d="M9 23 L14 9 M23 23 L18 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.55" />
-      <path d="M10.5 17.5 l3.5 3.5 l7.5 -8" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <span
+      className="inline-block shrink-0"
+      style={{ width: size, height: size, borderRadius: size * 0.28, background: "linear-gradient(135deg, #818cf8 0%, #2dd4bf 100%)" }}
+      aria-hidden="true"
+    >
+      <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+        <path d="M9 23 L14 9 M23 23 L18 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.55" />
+        <path d="M10.5 17.5 l3.5 3.5 l7.5 -8" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
   );
 }
 
@@ -128,7 +128,7 @@ export function Button({
   );
 }
 
-export function Kpi({ label, value, hint, tone, icon }: { label: string; value: React.ReactNode; hint?: string; tone?: "accent" | "ok" | "major" | "blocker"; icon?: React.ReactNode }) {
+export function Kpi({ label, value, hint, tone, icon, chart }: { label: string; value: React.ReactNode; hint?: string; tone?: "accent" | "ok" | "major" | "blocker"; icon?: React.ReactNode; chart?: React.ReactNode }) {
   const color = tone === "ok" ? "text-ok" : tone === "major" ? "text-major" : tone === "blocker" ? "text-blocker" : "text-accent";
   const tint = tone === "ok" ? "bg-ok-soft" : tone === "major" ? "bg-major-soft" : tone === "blocker" ? "bg-blocker-soft" : "bg-accent-soft";
   return (
@@ -137,7 +137,10 @@ export function Kpi({ label, value, hint, tone, icon }: { label: string; value: 
         <div className="text-xs font-medium text-muted">{label}</div>
         {icon && <span className={clsx("inline-flex h-8 w-8 items-center justify-center rounded-lg", tint, color)}>{icon}</span>}
       </div>
-      <div className={clsx("mt-1 font-display text-3xl font-bold tracking-tight", color)}>{value}</div>
+      <div className="mt-1 flex items-end justify-between gap-3">
+        <div className={clsx("font-display text-3xl font-bold tracking-tight", color)}>{value}</div>
+        {chart && <div className="shrink-0">{chart}</div>}
+      </div>
       {hint && <div className="mt-1 text-xs text-muted">{hint}</div>}
     </Card>
   );
