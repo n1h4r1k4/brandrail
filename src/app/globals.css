@@ -26,20 +26,22 @@
   --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, monospace;
 }
 
-html {
-  color-scheme: light;
-}
+@layer base {
+  html {
+    color-scheme: light;
+  }
 
-body {
-  background: var(--color-canvas);
-  color: var(--color-body);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    background: var(--color-canvas);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
 
-h1, h2, h3 {
-  font-family: var(--font-display);
-  color: var(--color-ink);
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+  }
 }
 
 /* Highlighted spans in the content viewer */
