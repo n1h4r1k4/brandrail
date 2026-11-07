@@ -103,38 +103,50 @@ function describeGeminiError(err: unknown): string {
 
 async function viaGemini<T>(req: Request<T>): Promise<StructuredResult<T>> {
   const started = Date.now();
-  const model = modelFor(req.tier);
-  try {
-    const client = await geminiClient();
-    const res = await client.models.generateContent({
-      model,
-      contents: req.user,
-      config: {
-        ...(req.system ? { systemInstruction: req.system } : {}),
-        responseMimeType: "application/json",
-        responseJsonSchema: toGeminiSchema(req.schema),
-        temperature: 0.2,
-      },
-    });
-    const latencyMs = Date.now() - started;
-    const usage = {
-      input: res.usageMetadata?.promptTokenCount ?? 0,
-      cacheRead: res.usageMetadata?.cachedContentTokenCount ?? 0,
-      output: res.usageMetadata?.candidatesTokenCount ?? 0,
-    };
-    if (res.promptFeedback?.blockReason) return { status: "refused", message: "Gemini declined this request.", latencyMs, usage, model };
-    const text = res.text;
-    if (!text) return { status: "error", message: "Gemini returned an empty response.", latencyMs, usage, model };
-    let raw: unknown;
+  const primary = modelFor(req.tier);
+  const fallback = modelFor("fast");
+  // On a free-tier rate limit, retry once on the lighter model, which has its own quota.
+  const chain = primary === fallback ? [primary] : [primary, fallback];
+  let lastErr: unknown;
+  for (const model of chain) {
     try {
-      raw = JSON.parse(text);
-    } catch {
-      return { status: "error", message: "Gemini returned malformed JSON.", latencyMs, usage, model };
+      return await geminiOnce(req, model, started);
+    } catch (err) {
+      lastErr = err;
+      if ((err as { status?: number })?.status !== 429) break;
     }
-    const parsed = req.schema.safeParse(raw);
-    if (!parsed.success) return { status: "error", message: "Gemini's response did not match the expected schema.", latencyMs, usage, model };
-    return { status: "ok", data: parsed.data, latencyMs, usage, model: res.modelVersion ?? model };
-  } catch (err) {
-    return { status: "error", message: describeGeminiError(err), latencyMs: Date.now() - started };
   }
+  return { status: "error", message: describeGeminiError(lastErr), latencyMs: Date.now() - started };
+}
+
+async function geminiOnce<T>(req: Request<T>, model: string, started: number): Promise<StructuredResult<T>> {
+  const client = await geminiClient();
+  const res = await client.models.generateContent({
+    model,
+    contents: req.user,
+    config: {
+      ...(req.system ? { systemInstruction: req.system } : {}),
+      responseMimeType: "application/json",
+      responseJsonSchema: toGeminiSchema(req.schema),
+      temperature: 0.2,
+    },
+  });
+  const latencyMs = Date.now() - started;
+  const usage = {
+    input: res.usageMetadata?.promptTokenCount ?? 0,
+    cacheRead: res.usageMetadata?.cachedContentTokenCount ?? 0,
+    output: res.usageMetadata?.candidatesTokenCount ?? 0,
+  };
+  if (res.promptFeedback?.blockReason) return { status: "refused", message: "Gemini declined this request.", latencyMs, usage, model };
+  const text = res.text;
+  if (!text) return { status: "error", message: "Gemini returned an empty response.", latencyMs, usage, model };
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return { status: "error", message: "Gemini returned malformed JSON.", latencyMs, usage, model };
+  }
+  const parsed = req.schema.safeParse(raw);
+  if (!parsed.success) return { status: "error", message: "Gemini's response did not match the expected schema.", latencyMs, usage, model };
+  return { status: "ok", data: parsed.data, latencyMs, usage, model: res.modelVersion ?? model };
 }

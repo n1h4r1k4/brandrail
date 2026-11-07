@@ -64,7 +64,7 @@ A brand checker fails if it invents rules, misquotes text or over-flags, because
 - **Postgres via Drizzle, with PGlite locally.** One schema, real SQL in production (Neon) and a zero-setup embedded database for development. Migrations are embedded and applied at runtime under an advisory lock.
 - **Sandbox per visitor instead of accounts.** Judges must reach the product without signing in, so each visitor gets an isolated workspace (unguessable ID in an httpOnly cookie) and switches between four personas. Role permissions are enforced on the server in every action.
 - **OCR in the browser.** Images never need to leave the user's machine for OCR, contrast or palette analysis, and the server stays light.
-- **Provider-agnostic AI layer, free by default.** All AI calls go through one structured-output interface (`src/lib/ai/structured.ts`). With an Anthropic key it uses Claude (Sonnet 5.5 for review, Haiku 5.5 for intent, with prompt caching and server-side refusal fallback). Without one it uses Google Gemini's free tier (`gemini-flash-latest`), so the hosted demo costs nothing to run. Without either it runs rule-based checks only and says so. The verifier treats every provider's output the same way.
+- **Provider-agnostic AI layer, free by default.** All AI calls go through one structured-output interface (`src/lib/ai/structured.ts`). With an Anthropic key it uses Claude (Sonnet 5.5 for review, Haiku 5.5 for intent, with prompt caching and server-side refusal fallback). Without one it uses Google Gemini's free tier (`gemini-3.5-flash`), so the hosted demo costs nothing to run. Without either it runs rule-based checks only and says so. The verifier treats every provider's output the same way.
 - **Whole-rulebook prompting with caching instead of vector retrieval.** A rulebook of ~30 rules and ~15 facts fits comfortably in context. Sending all of it (cached) is more accurate than top-k retrieval at this size. pgvector retrieval is planned only if rulebooks grow large.
 
 ## Evaluation
@@ -85,7 +85,7 @@ These numbers are optimistic: the golden set was written alongside the rules. Ro
 
 | Item | Use |
 |---|---|
-| Google Gemini API (free tier), `gemini-flash-latest` / `gemini-flash-lite-latest` | Default AI provider on the hosted demo: content review, Rule Compiler, intent extraction (JSON-schema output) |
+| Google Gemini API (free tier), `gemini-3.5-flash` / `gemini-3.5-flash-lite` | Default AI provider on the hosted demo: content review, Rule Compiler, intent extraction (JSON-schema output) |
 | Anthropic Claude API, `claude-sonnet-5-5` / `claude-haiku-5-5` | Used instead of Gemini when an Anthropic key is configured (structured output, prompt caching, server-side refusal fallback) |
 | tesseract.js (Apache-2.0) | In-browser OCR |
 | unpdf, mammoth | PDF and DOCX text extraction |

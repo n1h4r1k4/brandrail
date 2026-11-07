@@ -5,6 +5,7 @@ import {
 import { getSession } from "@/lib/session";
 import { activeProvider, providerLabel, providerName } from "@/lib/ai/client";
 import { Logo } from "@/components/ui";
+import { FlowLine, HeroVisual } from "@/components/graphics";
 
 export const dynamic = "force-dynamic";
 
@@ -76,15 +77,7 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
           </div>
 
           <div className="fade-up relative [animation-delay:120ms]">
-            <div className="absolute -inset-6 rounded-[32px] bg-gradient-to-tr from-indigo-500/30 via-violet-500/10 to-teal-400/30 blur-2xl" />
-            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0f172a] shadow-2xl">
-              <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" /><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" /><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
-                <span className="ml-3 text-[11px] text-slate-500">brandrail · Diwali cashback post</span>
-              </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/landing/review.png" alt="Brandrail review screen: highlighted text and cited findings with suggested fixes" className="block w-full" />
-            </div>
+            <HeroVisual />
           </div>
         </section>
 
@@ -105,11 +98,12 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
         <section className="py-20">
           <p className="text-center font-mono text-xs tracking-[0.2em] text-indigo-300">HOW IT WORKS</p>
           <h2 className="mt-3 text-center font-display text-3xl font-bold text-white sm:text-4xl">From draft to verified, with people in charge</h2>
-          <div className="mt-10 grid gap-4 md:grid-cols-4">
+          <div className="relative mt-10 grid gap-4 md:grid-cols-4">
+            <FlowLine />
             {STEPS.map(({ icon: Icon, title, body }, i) => (
-              <div key={title} className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div key={title} className="relative rounded-2xl border border-white/10 bg-[#0b1224] p-5">
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-300"><Icon size={20} /></span>
+                  <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-200 ring-1 ring-indigo-400/40"><Icon size={20} /></span>
                   <span className="font-mono text-xs text-slate-500">0{i + 1}</span>
                 </div>
                 <h3 className="mt-4 font-display text-lg font-semibold text-white">{title}</h3>

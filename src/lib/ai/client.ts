@@ -8,8 +8,8 @@ export type Provider = "claude" | "gemini" | "none";
 
 export const CLAUDE_REVIEW_MODEL = process.env.BRANDRAIL_REVIEW_MODEL || "claude-sonnet-5-5";
 export const CLAUDE_FAST_MODEL = process.env.BRANDRAIL_FAST_MODEL || "claude-haiku-5-5";
-export const GEMINI_REVIEW_MODEL = process.env.BRANDRAIL_GEMINI_MODEL || "gemini-flash-latest";
-export const GEMINI_FAST_MODEL = process.env.BRANDRAIL_GEMINI_FAST_MODEL || "gemini-flash-lite-latest";
+export const GEMINI_REVIEW_MODEL = process.env.BRANDRAIL_GEMINI_MODEL || "gemini-3.5-flash";
+export const GEMINI_FAST_MODEL = process.env.BRANDRAIL_GEMINI_FAST_MODEL || "gemini-3.5-flash-lite";
 
 export function activeProvider(): Provider {
   if (process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN) return "claude";
@@ -26,7 +26,7 @@ export function modelFor(tier: "review" | "fast") {
   return "none";
 }
 
-/** Short label for the UI, e.g. "Claude · claude-sonnet-5-5" or "Gemini (free tier) · gemini-flash-latest". */
+/** Short label for the UI, e.g. "Claude · claude-sonnet-5-5" or "Gemini (free tier) · gemini-3.5-flash". */
 export function providerLabel() {
   const p = activeProvider();
   if (p === "claude") return `Claude · ${CLAUDE_REVIEW_MODEL}`;

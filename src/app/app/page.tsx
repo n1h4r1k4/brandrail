@@ -7,6 +7,7 @@ import { auditEvents } from "@/lib/db/schema";
 import { Avatar, Card, Kpi, Tag, timeAgo } from "@/components/ui";
 import { ROLE_LABEL, SOURCE_LABEL } from "@/lib/workflow";
 import { ContentTable } from "./content-table";
+import { ShieldOrbit } from "@/components/graphics";
 
 export default async function Dashboard() {
   const s = await requireSession();
@@ -30,6 +31,7 @@ export default async function Dashboard() {
     <>
       <section className="fade-up relative overflow-hidden rounded-3xl bg-hero p-6 text-white shadow-lift sm:p-8">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" />
+        <ShieldOrbit className="pointer-events-none absolute -right-16 -top-20 hidden h-[360px] w-[360px] opacity-70 lg:block" />
         <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-xl">
             <div className="flex items-center gap-2 text-sm text-indigo-100">
@@ -53,7 +55,7 @@ export default async function Dashboard() {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="relative grid grid-cols-3 gap-3 text-center lg:mr-56">
             {[
               ["In review", items.filter((c) => c.status === "in_review").length],
               ["Sent back", items.filter((c) => c.status === "changes_requested").length],

@@ -12,6 +12,7 @@ import { ROLE_LABEL, SOURCE_LABEL, canOverride, canReview } from "@/lib/workflow
 import type {
   Category, CheckStats, ContentSource, ContentStatus, Field, FindingStatus, ImageAnalysis, Intent, Role, Severity,
 } from "@/lib/db/schema";
+import { CheckPipeline, VerifiedSeal } from "@/components/graphics";
 import {
   acceptSuggestion, addComment, approveContent, confirmIntent, disputeFinding, overrideFinding, reopenFinding, requestChanges, runFullCheck, saveEdit, submitForReview,
 } from "../../actions";
@@ -225,8 +226,8 @@ function VerifiedRecord({ p }: { p: DetailProps }) {
   return (
     <div className="mt-4 rounded-xl border border-ok/30 bg-ok-soft/70 px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm">
-          <ShieldCheck className="text-ok" size={20} />
+        <div className="flex items-center gap-3 text-sm">
+          <VerifiedSeal size={56} className="shrink-0 drop-shadow" />
           <div>
             <b className="text-ink">Brandrail Verified</b> · v{v.version} locked against Rulebook v{v.rulebookVersion}
             <div className="text-xs text-muted">
@@ -408,7 +409,18 @@ function CheckSummary({ p }: { p: DetailProps }) {
   const full = p.check.kind === "full" ? s : p.lastFull?.stats;
   return (
     <Card className="p-4 text-sm">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">How this was checked</div>
+      <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">How this was checked</div>
+      <div className="mb-3">
+        <CheckPipeline
+          rules={s.rulesEvaluated}
+          ruleFindings={s.ruleFindings}
+          masked={s.maskedTerms ?? 0}
+          ai={s.ai.status === "ok" ? "on" : s.ai.status === "skipped" ? "skipped" : s.ai.status === "error" || s.ai.status === "refused" ? "error" : "off"}
+          proposed={s.ai.proposed ?? 0}
+          kept={s.ai.kept ?? 0}
+          dropped={s.dropped.length}
+        />
+      </div>
       <ul className="space-y-1 text-ink-2">
         <li>{p.check.kind === "full" ? "Full check" : "Quick re-check"} of v{p.check.version} against <b>Rulebook v{p.check.rulebookVersion}</b> · {timeAgo(p.check.createdAt)}</li>
         <li><Tag tone="teal">Rule-based</Tag> {s.rulesEvaluated} rules evaluated → {s.ruleFindings} finding(s). Reproducible: same text + same rulebook = same result.</li>

@@ -6,6 +6,7 @@ import { factStatus } from "@/lib/engine/types";
 import { todayIST } from "@/lib/engine/text";
 import { fingerprint } from "@/lib/review";
 import { Card, Kpi, Mono, PageHeader, SeverityTag, Tag } from "@/components/ui";
+import { Donut } from "@/components/graphics";
 import { CATEGORY_LABEL, SOURCE_LABEL } from "@/lib/workflow";
 import type { Category, ContentSource } from "@/lib/db/schema";
 
@@ -45,7 +46,6 @@ export default async function Insights() {
   const byCat = new Map<Category, number>();
   for (const f of all) byCat.set(f.category, (byCat.get(f.category) ?? 0) + 1);
   const cats = [...byCat.entries()].sort((a, b) => b[1] - a[1]);
-  const maxCat = Math.max(1, ...cats.map((c) => c[1]));
 
   const bySource = (["human", "agency", "ai"] as ContentSource[]).map((src) => {
     const ids = new Set(contentRows.filter((c) => c.source === src).map((c) => c.id));
@@ -91,14 +91,8 @@ export default async function Insights() {
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
           <h2 className="text-base font-semibold">Issues by category</h2>
-          <div className="mt-4 space-y-2.5">
-            {cats.map(([c, n]) => (
-              <div key={c} className="grid grid-cols-[130px_1fr_32px] items-center gap-3 text-sm">
-                <span className="text-ink-2">{CATEGORY_LABEL[c]}</span>
-                <div className="h-2.5 rounded-full bg-soft"><div className="h-2.5 rounded-full bg-accent" style={{ width: `${(n / maxCat) * 100}%` }} /></div>
-                <span className="text-right font-mono text-xs text-muted">{n}</span>
-              </div>
-            ))}
+          <div className="mt-4">
+            <Donut data={cats.map(([c, n]) => ({ label: CATEGORY_LABEL[c], value: n }))} />
           </div>
         </Card>
         <Card className="p-5">

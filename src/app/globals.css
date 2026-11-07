@@ -103,3 +103,23 @@
 .fade-up { animation: fade-up 0.35s ease-out both; }
 
 .scroll-thin { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+
+/* ---------- graphics ---------- */
+@keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes scan { 0% { top: -10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes dash-flow { to { stroke-dashoffset: -40; } }
+@keyframes pop-in { 0% { opacity: 0; transform: scale(0.85) translateY(6px); } 100% { opacity: 1; transform: none; } }
+@keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 0.6; } 100% { transform: scale(1.6); opacity: 0; } }
+.float-a { animation: float-y 5s ease-in-out infinite; }
+.float-b { animation: float-y 6s ease-in-out 1s infinite; }
+.float-c { animation: float-y 7s ease-in-out 2s infinite; }
+.scan-beam { animation: scan 4.5s ease-in-out infinite; }
+.spin-slow { animation: spin-slow 40s linear infinite; transform-origin: center; transform-box: fill-box; }
+.spin-slower { animation: spin-slow 70s linear infinite reverse; transform-origin: center; transform-box: fill-box; }
+.dash-flow { stroke-dasharray: 6 14; animation: dash-flow 1.2s linear infinite; }
+.pop-in { animation: pop-in 0.5s cubic-bezier(.2,.8,.2,1) both; }
+.pulse-ring { animation: pulse-ring 2.4s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+@media (prefers-reduced-motion: reduce) {
+  .float-a, .float-b, .float-c, .scan-beam, .spin-slow, .spin-slower, .dash-flow, .pop-in, .pulse-ring, .fade-up { animation: none !important; }
+}
