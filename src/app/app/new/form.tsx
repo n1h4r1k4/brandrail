@@ -5,6 +5,7 @@ import { FileUp, ImagePlus, Loader2, Sparkles, X } from "lucide-react";
 import { Button, Card, Tag } from "@/components/ui";
 import { createContent, extractDocumentText } from "../actions";
 import { analyseImage } from "@/lib/client/image-analysis";
+import { useSound } from "@/components/sound";
 import type { ImageAnalysis } from "@/lib/db/schema";
 import type { Sample } from "@/lib/seed/nimbus";
 
@@ -12,6 +13,7 @@ const CHANNELS = ["Instagram", "Facebook", "X / Twitter", "LinkedIn", "Email", "
 
 export function NewContentForm({ samples, ai }: { samples: Sample[]; ai: boolean }) {
   const router = useRouter();
+  const { play } = useSound();
   const [title, setTitle] = useState("");
   const [channel, setChannel] = useState("Instagram");
   const [audience, setAudience] = useState("");
@@ -74,8 +76,10 @@ export function NewContentForm({ samples, ai }: { samples: Sample[]; ai: boolean
       if (!res.ok) {
         setBusy(null);
         setError(res.error);
+        play("error");
         return;
       }
+      play("success");
       router.push(`/app/content/${res.id}`);
     });
   }

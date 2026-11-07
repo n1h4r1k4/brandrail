@@ -3,7 +3,7 @@
 - Mode: **rule-based checks only**
 - Golden set: **44 labelled samples**, of which 12 are clean controls (fictional Nimbus Pay brand, eval/golden.ts)
 - Rulebook: v1 (29 rules) · Facts as of 2026-11-07
-- Generated: 2026-11-07T13:36:01.601Z
+- Generated: 2026-11-07T15:04:36.700Z
 
 | Metric | Value |
 |---|---|

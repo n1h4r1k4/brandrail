@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, monospace;
+  --font-serif: var(--font-instrument), Georgia, "Times New Roman", serif;
+}
+
 @theme {
   --color-ink: #0f172a;
   --color-ink-2: #1e293b;
@@ -21,9 +28,6 @@
   --color-minor-soft: #e8efff;
   --color-ok: #047857;
   --color-ok-soft: #e5f6ef;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
-  --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, monospace;
 }
 
 @layer base {
@@ -123,3 +127,23 @@
 @media (prefers-reduced-motion: reduce) {
   .float-a, .float-b, .float-c, .scan-beam, .spin-slow, .spin-slower, .dash-flow, .pop-in, .pulse-ring, .fade-up { animation: none !important; }
 }
+
+/* ---------- immersive landing ---------- */
+html { scroll-behavior: smooth; }
+.text-silver {
+  background: linear-gradient(180deg, #ffffff 0%, #ddd9f5 60%, #b9b3e3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.glass {
+  background: rgba(12, 10, 38, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+@keyframes reveal-up { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+.reveal { animation: reveal-up 1s cubic-bezier(.2,.7,.1,1) both; }
+@media (prefers-reduced-motion: reduce) { .reveal { animation: none !important; } }
+.text-shade { text-shadow: 0 1px 14px rgba(7, 6, 26, 0.95), 0 0 2px rgba(7, 6, 26, 0.8); }
+.drop-shade { filter: drop-shadow(0 2px 18px rgba(7, 6, 26, 0.85)); }

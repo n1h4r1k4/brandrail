@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Inter, Instrument_Serif, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { SoundProvider } from "@/components/sound";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const grotesk = Space_Grotesk({ variable: "--font-grotesk", subsets: ["latin"], weight: ["500", "600", "700"] });
 const mono = JetBrains_Mono({ variable: "--font-jbmono", subsets: ["latin"], weight: ["500"] });
+const serif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: "Brandrail: guardrails, not gatekeepers",
@@ -15,7 +17,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${grotesk.variable} ${mono.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${grotesk.variable} ${mono.variable} ${serif.variable}`}>
+        <SoundProvider>{children}</SoundProvider>
+      </body>
     </html>
   );
 }

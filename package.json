@@ -26,6 +26,7 @@
     "react-dom": "19.2",
     "server-only": "^0.0.1",
     "tesseract.js": "^7.0.0",
+    "three": "^0.187.0",
     "unpdf": "^2.1.0",
     "zod": "^4.6.7"
   },
@@ -35,6 +36,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.187.0",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "15.5.29",

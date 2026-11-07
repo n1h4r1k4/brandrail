@@ -134,6 +134,17 @@ export function verifyAiFindings(
       continue;
     }
     const facts = c.fact_codes.map((x) => x.trim().toUpperCase()).filter((x) => factCodes.has(x));
+    // A finding filed under the expired-facts rule must point at a fact that is actually out of date.
+    if (rule.params.detectors?.length === 1 && rule.params.detectors[0] === "expired_facts") {
+      const stale = facts.some((code) => {
+        const f = kit.facts.find((x) => x.code === code);
+        return f && !isActive(f, kit.today);
+      });
+      if (!stale) {
+        dropped.push({ ruleCode: code, quote: exactQuote, reason: "cites the expired-facts rule, but none of the cited facts is expired or superseded" });
+        continue;
+      }
+    }
     kept.push({
       ruleCode: code,
       field,

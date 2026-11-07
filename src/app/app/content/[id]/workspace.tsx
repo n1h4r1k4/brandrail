@@ -13,6 +13,7 @@ import type {
   Category, CheckStats, ContentSource, ContentStatus, Field, FindingStatus, ImageAnalysis, Intent, Role, Severity,
 } from "@/lib/db/schema";
 import { CheckPipeline, VerifiedSeal } from "@/components/graphics";
+import { useSound } from "@/components/sound";
 import {
   acceptSuggestion, addComment, approveContent, confirmIntent, disputeFinding, overrideFinding, reopenFinding, requestChanges, runFullCheck, saveEdit, submitForReview,
 } from "../../actions";
@@ -54,6 +55,7 @@ export function ContentWorkspace(p: DetailProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [editing, setEditing] = useState(false);
   const { content: c, viewer } = p;
+  const { play } = useSound();
 
   const isCreator = viewer.role === "creator" || viewer.role === "admin";
   const editable = c.status === "draft" || c.status === "changes_requested";
@@ -69,6 +71,7 @@ export function ContentWorkspace(p: DetailProps) {
       const res = await fn();
       setBusy(null);
       if (!res.ok) setError("error" in res && res.error ? res.error : "Something went wrong.");
+      play(!res.ok ? "error" : "verified" in res && (res as { verified?: boolean }).verified ? "verified" : "success");
       router.refresh();
     });
   }

@@ -262,13 +262,21 @@ export async function submitForReview(contentId: string): Promise<Result> {
   if (s.user.role !== "creator" && s.user.role !== "admin") return fail("Only the creator submits content.");
   if (!editable(c.status)) return fail("Already in review or approved.");
   let last = await latestCheck(s.db, contentId);
+  let ranFull = false;
   if (!last || last.version !== c.currentVersion || last.kind !== "full") {
     await runCheck(s.db, contentId, "full", s.user.name);
     last = await latestCheck(s.db, contentId);
+    ranFull = true;
   }
   const rows = await s.db.select().from(findings).where(eq(findings.checkId, last!.id));
   const open = rows.filter((f) => f.severity === "blocker" && f.status === "open");
-  if (open.length) return fail(`Fix or dispute ${open.length} blocker${open.length > 1 ? "s" : ""} before submitting.`);
+  if (open.length) {
+    const n = `${open.length} blocker${open.length > 1 ? "s" : ""}`;
+    if (ranFull) refresh();
+    return fail(ranFull
+      ? `Before submitting, Brandrail ran a full check on v${c.currentVersion} and found ${n}. Fix or dispute ${open.length > 1 ? "them" : "it"}, then submit again.`
+      : `Fix or dispute ${n} before submitting.`);
+  }
   const required = requiredRolesFor(rows);
   const round = c.reviewRound + 1;
   await s.db.update(contents).set({ status: "in_review", requiredRoles: required, reviewRound: round, updatedAt: new Date() }).where(eq(contents.id, contentId));

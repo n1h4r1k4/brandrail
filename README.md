@@ -30,6 +30,7 @@ The demo needs no sign-up. Each visitor gets a private sandbox with a fictional 
 | **Approval workflow** | Roles: creator, brand reviewer, compliance, brand admin. Claims/legal/confidentiality findings automatically add Compliance as a required approver, and only Compliance can override those. Overrides need a reason. Request changes, rounds, version diffs, comments, Brandrail Verified record with export. |
 | **Insights** | Issues by category and by who wrote the content (employee / agency / AI tool), first-round approval rate, verifier keep-rate, expiring facts, **Guideline Health** (rules that are often disputed, often overridden, or clear but repeatedly broken). |
 | **Audit log** | Append-only, SHA-256 hash-chained events. The chain is recomputed and verified on every view. |
+| **Immersive landing + sound** | A WebGL scene (three.js) of glowing guardrails: content cards travel through a scanning checkpoint, arriving flagged (amber) and leaving verified (teal); the camera follows scroll and mouse. An opt-in sound layer is synthesised live with the Web Audio API (ambient pad, chimes on accepted fixes, an arpeggio when content is verified), with an equaliser toggle on every page. Respects reduced-motion; sound is off until chosen. |
 
 ## Architecture
 
@@ -48,7 +49,7 @@ flowchart LR
   API --> DB
 ```
 
-**Stack:** Next.js 15 (App Router, server actions, TypeScript) · Tailwind CSS 4 · Drizzle ORM · Postgres (Neon on Vercel; embedded PGlite for local development) · Google Gen AI SDK and Anthropic TypeScript SDK behind one provider interface · tesseract.js · unpdf · mammoth · diff · lucide-react.
+**Stack:** Next.js 15 (App Router, server actions, TypeScript) · Tailwind CSS 4 · three.js (WebGL) · Web Audio API · Drizzle ORM · Postgres (Neon on Vercel; embedded PGlite for local development) · Google Gen AI SDK and Anthropic TypeScript SDK behind one provider interface · tesseract.js · unpdf · mammoth · diff · lucide-react.
 
 ### The hard part: AI findings people can trust
 
@@ -94,6 +95,8 @@ Reports: [rule-based](docs/eval-report.md) · [AI run](docs/eval-report-ai.md) �
 | Google Gemini API (free tier), `gemini-3.5-flash` / `gemini-3.5-flash-lite` | Default AI provider on the hosted demo: content review, Rule Compiler, intent extraction (JSON-schema output) |
 | Anthropic Claude API, `claude-sonnet-5-5` / `claude-haiku-5-5` | Used instead of Gemini when an Anthropic key is configured (structured output, prompt caching, server-side refusal fallback) |
 | tesseract.js (Apache-2.0) | In-browser OCR |
+| three.js (MIT) | Landing-page 3D scene (original artwork built in code, with bloom post-processing) |
+| Web Audio API (browser built-in) | Generative ambient sound and UI cues; no audio files |
 | unpdf, mammoth | PDF and DOCX text extraction |
 | Drizzle ORM, postgres.js, PGlite | Database access, local embedded Postgres |
 | Next.js, React, Tailwind CSS, lucide-react, diff, zod | App framework, UI, word diffs, schemas |
@@ -102,6 +105,8 @@ Reports: [rule-based](docs/eval-report.md) · [AI run](docs/eval-report-ai.md) �
 **Data:** all demo data (the Nimbus Pay brand book, facts, sample content, sample creative and guidelines PDF) is fictional and was created for this project. No real company's material is used.
 
 **Screenshots:** [landing](docs/screenshots/landing.png) · [dashboard](docs/screenshots/dashboard.png) · [review](docs/screenshots/review.png) · [verified](docs/screenshots/verified.png) · [insights](docs/screenshots/insights.png) · [rulebook](docs/screenshots/rulebook.png)
+
+**Design note:** the landing page's immersive style (entry choice with or without sound, 3D scene, large serif type) was inspired by award-winning agency sites. All artwork, code and sound in Brandrail are original.
 
 **Templates and AI assistance (disclosure):** the project was started from `create-next-app` (boilerplate). It is a solo build, and the implementation was written with heavy use of **Claude Code** (Anthropic's AI coding assistant) under the author's direction. Commits made with it carry a `Co-Authored-By: Claude` trailer.
 

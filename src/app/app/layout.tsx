@@ -7,6 +7,7 @@ import { activeProvider, providerLabel } from "@/lib/ai/client";
 import { Logo } from "@/components/ui";
 import { Nav } from "./nav";
 import { RoleSwitcher } from "./role-switcher";
+import { SoundToggle } from "@/components/sound";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="hidden items-center gap-2 text-xs text-muted md:flex">
             <span className="rounded-full bg-soft px-2.5 py-1">Switch persona to see each role&apos;s view →</span>
           </div>
-          <RoleSwitcher current={s.user.id} people={s.people.map((p) => ({ id: p.id, name: p.name, title: p.title, role: p.role }))} />
+          <div className="flex items-center gap-1">
+            <SoundToggle />
+            <RoleSwitcher current={s.user.id} people={s.people.map((p) => ({ id: p.id, name: p.name, title: p.title, role: p.role }))} />
+          </div>
         </header>
         <div className="border-b border-line bg-white px-3 py-2 md:hidden">
           <Nav queue={queue} horizontal />
