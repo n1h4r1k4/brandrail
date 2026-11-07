@@ -19,12 +19,17 @@ async function connect(): Promise<DB> {
     const client = postgres(url, { prepare: false, max: 5, idle_timeout: 20 });
     return drizzle(client, { schema }) as unknown as DB;
   }
-  // Local development: embedded Postgres (PGlite) stored in ./.data
+  // Local development: embedded Postgres (PGlite) stored in ./.data.
+  // On a serverless host without DATABASE_URL, fall back to /tmp so the app still runs
+  // (data is then temporary; connect Postgres for persistence).
+  const serverless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const dir = serverless ? "/tmp/brandrail-pglite" : "./.data/pglite";
+  if (serverless) console.warn("Brandrail: DATABASE_URL is not set; using a temporary embedded database.");
   const { mkdirSync } = await import("node:fs");
-  mkdirSync("./.data", { recursive: true });
+  mkdirSync(dir.replace(/\/pglite$/, ""), { recursive: true });
   const { PGlite } = await import("@electric-sql/pglite");
   const { drizzle } = await import("drizzle-orm/pglite");
-  const client = new PGlite("./.data/pglite");
+  const client = new PGlite(dir);
   return drizzle(client, { schema }) as unknown as DB;
 }
 
